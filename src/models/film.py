@@ -1,16 +1,23 @@
-import orjson
-from pydantic import BaseModel
+from datetime import datetime
+
+from src.models.genre import GenreShort
+from src.models.mixins import UUIDMixin, JSONConfigMixin
+from src.models.person import PersonShort
 
 
-def orjson_dumps(v, *, default):
-    return orjson.dumps(v, default=default).decode()
+class FilmShort(UUIDMixin, JSONConfigMixin):
+    title:          str
+    imdb_rating:    float
 
 
-class Film(BaseModel):
-    id: str
-    title: str
-    description: str
+class Film(FilmShort):
+    description:    str
+    creation_date:  datetime
+    genre:          list[GenreShort]
+    actors:         list[PersonShort]
+    writers:        list[PersonShort]
+    directors:      list[PersonShort]
 
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
+
+class FilmRoles(UUIDMixin, JSONConfigMixin):
+    roles:          list[str]
