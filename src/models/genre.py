@@ -1,4 +1,4 @@
-from src.models.mixins import UUIDMixin, JSONConfigMixin
+from models.mixins import JSONConfigMixin, UUIDMixin
 
 
 class GenreShort(UUIDMixin, JSONConfigMixin):
