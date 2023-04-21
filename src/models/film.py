@@ -1,5 +1,5 @@
 import orjson
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 def orjson_dumps(v, *, default):
@@ -9,7 +9,8 @@ def orjson_dumps(v, *, default):
 class Film(BaseModel):
     id: str
     title: str
-    description: str
+    # description: str
+    imdb_rating: float
 
     class Config:
         json_loads = orjson.loads

@@ -9,9 +9,9 @@ router = APIRouter()
 
 
 class Film(BaseModel):
-    id: str
+    uuid: str
     title: str
-
+    imdb_rating: float
 
 @router.get("/{film_id}", response_model=Film)
 async def film_details(
@@ -21,4 +21,4 @@ async def film_details(
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
 
-    return Film(id=film.id, title=film.title)
+    return Film(uuid=film.id, title=film.title, imdb_rating=film.imdb_rating)
