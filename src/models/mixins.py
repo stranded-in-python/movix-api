@@ -1,8 +1,9 @@
-import orjson
-from pydantic import BaseModel
 from uuid import UUID
 
-from src.core.utils import orjson_dumps
+import orjson
+from pydantic import BaseModel
+
+from core.utils import orjson_dumps
 
 
 class JSONConfigMixin:

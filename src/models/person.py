@@ -1,5 +1,5 @@
-from src.models.film import FilmRoles
-from src.models.mixins import UUIDMixin, JSONConfigMixin
+from models.film import FilmRoles
+from models.mixins import JSONConfigMixin, UUIDMixin
 
 
 class PersonShort(UUIDMixin, JSONConfigMixin):
