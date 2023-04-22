@@ -25,6 +25,11 @@ async def film_details(
     return Film(id=film.id, title=film.title, imdb_rating=film.imdb_rating)
 
 # Serge
+# Проблемы
+# 1.Запиливал, исходя из схемы предыдущего спринта. У жанров нет айдишников, поэтому сделал пока
+# пока genre_name
+# 2. Не использовал redis. Несколько объектов можно из него вытягивать так
+# https://redis.io/commands/json.mget/
 @router.get("/films", response_model=List[Film])
 async def film_list(
         sort: str, page_size: int, page_number: int, 
