@@ -7,7 +7,7 @@ from redis.asyncio import Redis
 
 from db.elastic import get_elastic
 from db.redis import get_redis
-from models.film import Film
+from models.film import Film, FilmShort
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
@@ -45,6 +45,35 @@ class FilmService:
     async def _put_film_to_cache(self, film: Film):
         await self.redis.set(film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
 
+    # Serge пока(?) без редис
+    async def get_films(self, sort: str, 
+                        page_size: int, 
+                        page_number: int, 
+                        genre_name: str) -> Optional[Film]:
+        films = await self._get_films_from_elastic(sort, page_size, page_number, genre_name)
+        if not films:
+            return None
+        return films
+
+    async def _get_films_from_elastic(
+            self, sort: str, page_number: int, page_size: int, genre_name=None
+            ) -> Optional[FilmShort]:
+        try:
+            if genre_name:
+                query = {
+                        "bool": {
+                        "filter": [{"terms": { "genre" : [genre_name]}}]} # ! пока что genre_name. Должен быть id
+                        }
+            else:
+                query = {"match_all": {}}
+            body = {
+                    "from": page_number, "size": page_size, "query": query, 
+                    "_source": ["id", "imdb_rating", "title"]
+                    }
+            doc = await self.elastic.search(index="movies",body=body, sort=f"{sort}:desc")
+        except NotFoundError:
+            return None
+        return [FilmShort(**hit) for hit in doc["hits"]["hits"]["_source"]]
 
 @lru_cache()
 def get_film_service(
