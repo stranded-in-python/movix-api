@@ -42,8 +42,4 @@ if __name__ == "__main__":
     # `uvicorn main:app --host 0.0.0.0 --port 8000`
     # но чтобы не терять возможность использовать дебагер,
     # запустим uvicorn сервер через python
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)

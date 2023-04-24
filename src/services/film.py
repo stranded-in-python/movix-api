@@ -46,10 +46,10 @@ class FilmService:
         await self.redis.set(film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
 
     # Serge пока(?) без редис
-    async def get_films(self, sort: str, 
-                        page_size: int, 
-                        page_number: int, 
-                        genre_name: str) -> Optional[Film]:
+    async def get_films(self, sort: str,
+                        page_size: int,
+                        page_number: int,
+                        genre_name: str) -> Optional[FilmShort]:
         films = await self._get_films_from_elastic(sort, page_size, page_number, genre_name)
         if not films:
             return None
@@ -67,13 +67,37 @@ class FilmService:
             else:
                 query = {"match_all": {}}
             body = {
-                    "from": page_number, "size": page_size, "query": query, 
+                    "from": page_number, "size": page_size, "query": query,
                     "_source": ["id", "imdb_rating", "title"]
                     }
             doc = await self.elastic.search(index="movies",body=body, sort=f"{sort}:desc")
         except NotFoundError:
             return None
-        return [FilmShort(**hit) for hit in doc["hits"]["hits"]["_source"]]
+        return [FilmShort(**hit)["_source"] for hit in doc["hits"]["hits"]]
+
+    async def get_by_query(
+            self, query: str, page_number: int, page_size: int
+            ) -> Optional[FilmShort]:
+        film = await self._get_qfilm_from_elastic(query, page_number, page_size)
+        if not film:
+            return None
+        return film
+    
+    async def get_qfilm_from_elastic(
+            self, film_name: str, page_number: int, page_size: int
+            ) -> Optional[FilmShort]:
+        try:
+            query = {"match": {"title": film_name}}
+            body = {
+                    "from": page_number, "size": page_size, "query": query,
+                    "_source": ["id", "imdb_rating", "title"]
+                    }
+            doc = await self.elastic.search(index="movies", body=body)
+        except NotFoundError:
+            return None
+        return [FilmShort(**hit["fields"]) for hit in doc["hits"]["hits"]]
+        
+
 
 @lru_cache()
 def get_film_service(
@@ -81,4 +105,3 @@ def get_film_service(
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> FilmService:
     return FilmService(redis, elastic)
-
