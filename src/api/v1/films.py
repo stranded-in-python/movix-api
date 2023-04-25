@@ -38,12 +38,16 @@ async def film_list(
     page_size: int,
     page_number: int,
     genre_name=None,  # должен быть id
+    similar_to=None,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
-    films = await film_service.get_films(sort, page_size, page_number, genre_name)
+    films = await film_service.get_films(
+        sort, page_size, page_number, genre_name, similar_to
+    )
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
     return films
+
 
 @router.get("/search", response_model=list[Film])
 async def film_list(
