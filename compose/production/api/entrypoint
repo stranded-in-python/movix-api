@@ -31,4 +31,3 @@ done
 >&2 echo 'ElasticSearch is available'
 
 exec "$@"
-
