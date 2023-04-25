@@ -15,6 +15,14 @@ class Film(BaseModel):
     imdb_rating: float
 
 
+class FilmDetailed(Film):
+    description: str
+    genre: list
+    actors: list
+    writers: list
+    directors: list
+
+
 @router.get("/{film_id}", response_model=Film)
 async def film_details(
     film_id: str, film_service: FilmService = Depends(get_film_service)
@@ -23,7 +31,16 @@ async def film_details(
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
 
-    return Film(id=film.id, title=film.title, imdb_rating=film.imdb_rating)
+    return FilmDetailed(
+        id=film.id,
+        title=film.title,
+        imdb_rating=film.imdb_rating,
+        description=film.description,
+        genre=film.genre,
+        actors=film.actors,
+        writers=film.writers,
+        directors=film.directors,
+    )
 
 
 # Serge
