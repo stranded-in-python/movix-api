@@ -1,5 +1,3 @@
-import logging
-
 import uvicorn
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
@@ -8,7 +6,6 @@ from redis.asyncio import Redis
 
 from api.v1 import films
 from core import config
-from core.logger import LOGGING
 from db import elastic, redis
 
 app = FastAPI(
@@ -42,8 +39,4 @@ if __name__ == "__main__":
     # `uvicorn main:app --host 0.0.0.0 --port 8000`
     # но чтобы не терять возможность использовать дебагер,
     # запустим uvicorn сервер через python
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
