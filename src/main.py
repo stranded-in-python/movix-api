@@ -21,9 +21,7 @@ async def startup():
     redis.redis = Redis(
         host=config.settings.redis_host, port=config.settings.redis_port
     )
-    elastic.es = AsyncElasticsearch(
-        hosts=[f"{config.settings.elastic_host}:{config.settings.elastic_port}"]
-    )
+    elastic.es = AsyncElasticsearch(hosts=[f"{config.settings.elastic_endpoint}"])
 
 
 @app.on_event("shutdown")
