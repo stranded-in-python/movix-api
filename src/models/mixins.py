@@ -13,4 +13,4 @@ class JSONConfigMixin:
 
 
 class UUIDMixin(BaseModel):
-    uuid: UUID
+    uuid: UUID | str
