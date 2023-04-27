@@ -12,7 +12,7 @@ from models.models import Person
 PERSON_CACHE_EXPIRE_IN_SECONDS = 24 * 60 * 60  # 24 hours
 
 
-class QueryPerson(BaseModel):
+class QueryParamPerson(BaseModel):
     name: str
     page_size: int | None
     page_number: int | None
@@ -36,7 +36,7 @@ class PersonService:
 
         return person
 
-    async def get_by_query(self, query: QueryPerson) -> list[Person]:
+    async def get_by_query(self, query: QueryParamPerson) -> list[Person]:
         """Поиск по персонам."""
         persons = await self._get_persons_from_elastic(query)
 
@@ -51,7 +51,9 @@ class PersonService:
 
         return Person(**doc['_source'])
 
-    async def _get_persons_from_elastic(self, query_param: QueryPerson) -> list[Person]:
+    async def _get_persons_from_elastic(
+        self, query_param: QueryParamPerson
+    ) -> list[Person]:
         # TODO Нужно ли выводить корутину?
         query_text = {"match": {"full_name": {"query": query_param.name}}}
         body = {
