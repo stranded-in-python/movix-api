@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Optional
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
@@ -8,7 +7,7 @@ from redis.asyncio import Redis
 
 from db.elastic import get_elastic
 from db.redis import get_redis
-from models.models import FilmShort, Person
+from models.models import Person
 
 PERSON_CACHE_EXPIRE_IN_SECONDS = 24 * 60 * 60  # 24 hours
 
@@ -37,12 +36,6 @@ class PersonService:
 
         return person
 
-    async def get_person_films(self, person_id: str) -> list[FilmShort]:
-        """Фильмы по персоне."""
-        ...  # TODO Посмотреть индекс персон
-        # TODO Посмотреть индекс фильмов
-        # TODO Написать оптимальный запрос на получение фильмов персоны
-
     async def get_by_query(self, query: QueryPerson) -> list[Person]:
         """Поиск по персонам."""
         persons = await self._get_persons_from_elastic(query)
@@ -51,17 +44,12 @@ class PersonService:
 
     async def _get_person_from_elastic(self, person_id: str) -> Person | None:
         try:
-            doc = await self.elastic.get('person', person_id)
+            doc = await self.elastic.get(index='persons', id=person_id)
 
         except NotFoundError:
             return None
 
         return Person(**doc['_source'])
-
-    async def _get_person_films_from_elastic(
-        self, person_id: str
-    ) -> Optional[list[FilmShort]]:
-        ...
 
     async def _get_persons_from_elastic(self, query_param: QueryPerson) -> list[Person]:
         # TODO Нужно ли выводить корутину?
@@ -74,7 +62,7 @@ class PersonService:
         }
 
         try:
-            doc = await self.elastic.search(index="persons", body=body)
+            doc = await self.elastic.msearch(index="persons", searches=body)
         except NotFoundError:
             return None
 

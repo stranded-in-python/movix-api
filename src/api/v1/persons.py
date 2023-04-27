@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
 
 from models.models import FilmShort, Person
+from services.film import get_film_service
 from services.persons import PersonService, QueryPerson, get_persons_service
 
 router = APIRouter()
@@ -14,10 +15,11 @@ async def person_details(
     person_id: str, persons_service: PersonService = Depends(get_persons_service)
 ) -> Person:
     """/api/v1/persons/<uuid:UUID>/"""
-    person = persons_service.get_by_id(person_id)
+    person = await persons_service.get_by_id(person_id)
 
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
+
     return person
 
 
@@ -40,11 +42,18 @@ async def person_list(
 
 @router.get("/{person_id}/film", response_model=Person)
 async def person_films(
-    person_id: str, persons_service: PersonService = Depends(get_persons_service)
+    person_id: str,
+    persons_service: PersonService = Depends(get_persons_service, get_film_service),
 ) -> list[FilmShort]:
     """/api/v1/persons/<uuid:UUID>/film/"""
+    person = await persons_service.get_by_id(person_id)
+
+    if not person:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
+
     films = await persons_service.get_person_films(person_id)
 
     if films is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
+
     return films

@@ -138,7 +138,7 @@ class FilmService:
     async def get_by_query(
         self, query: str, page_number: int, page_size: int
     ) -> Optional[FilmShort]:
-        film = await self._get_qfilm_from_elastic(query, page_number, page_size)
+        film = await self._get_film_from_elastic(query, page_number, page_size)
         if not film:
             return None
         return film

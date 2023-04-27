@@ -18,6 +18,7 @@ class GenreService:
         self.elastic = elastic
 
     async def get_by_id(self, genre_id: str) -> Optional[Genre]:
+        """Данные по конкретному жанру."""
         genre = await self._get_genre_from_cache(genre_id)
 
         if not genre:
@@ -87,10 +88,10 @@ class GenreService:
 
     async def _get_genres_from_elastic(self) -> Optional[list[Genre]]:
         query = {"match_all": {}}
-        body = {"query": query, "_source": ["id", "name"]}
+        source = ["id", "name"]
 
         try:
-            doc = await self.elastic.search(index="genres", body=body)
+            doc = await self.elastic.search(index="genres", query=query, source=source)
 
         except NotFoundError:
             return None
