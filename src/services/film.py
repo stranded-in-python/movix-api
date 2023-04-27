@@ -159,6 +159,22 @@ class FilmService:
             return None
         return [FilmShort(**hit["fields"]) for hit in doc["hits"]["hits"]]
 
+    async def get_films_by_person(
+        self, person_id: str, page_size: int | None, page_number: int | None
+    ) -> Optional[FilmShort]:
+        try:
+            query = {"match": {"id": person_id}}
+            body = {
+                "from": page_number,
+                "size": page_size,
+                "query": query,
+                "_source": ["id", "imdb_rating", "title"],
+            }
+            doc = await self.elastic.search(index="movies", body=body)
+        except NotFoundError:
+            return None
+        return [FilmShort(**hit["fields"]) for hit in doc["hits"]["hits"]]
+
 
 @lru_cache
 def get_film_service(
