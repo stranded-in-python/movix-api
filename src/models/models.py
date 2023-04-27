@@ -35,5 +35,4 @@ class FilmRoles(UUIDMixin, JSONConfigMixin):
 
 
 class Person(PersonShort):
-    roles: list[str]
     films: list[FilmRoles]
