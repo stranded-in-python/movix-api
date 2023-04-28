@@ -4,7 +4,7 @@ from json import dumps
 from typing import Callable
 
 from core.config import settings
-from db.redis import Cache, CacheError
+from db.redis import Cache
 
 
 def expired(timestamp: datetime) -> bool:

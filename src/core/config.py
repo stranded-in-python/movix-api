@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     elastic_endpoint: str = 'http://elastic:9200'
 
     # Корень проекта
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    base_dir = os.path.dirname(os.path.dirname(__file__))
 
 
 settings = Settings()
