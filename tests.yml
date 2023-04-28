@@ -9,7 +9,5 @@ services:
     command: "pytest /app"
     volumes:
       - ./src:/app:z
-    env_file:
-      - ./.envs/.local/.api
     ports:
       - "8001:8000"
