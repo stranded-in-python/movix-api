@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Optional
+from uuid import UUID
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
@@ -17,7 +18,7 @@ class GenreService:
         self.redis = redis
         self.elastic = elastic
 
-    async def get_by_id(self, genre_id: str) -> Optional[Genre]:
+    async def get_by_id(self, genre_id: UUID) -> Optional[Genre]:
         """Данные по конкретному жанру."""
         genre = await self._get_genre_from_cache(genre_id)
 
@@ -32,6 +33,7 @@ class GenreService:
         return genre
 
     async def get_genres(self) -> Optional[list[Genre]]:
+        """Получить список жанров"""
         genres = await self._get_genres_from_cache()
 
         if not genres:
@@ -44,7 +46,7 @@ class GenreService:
 
         return genres
 
-    async def _get_genre_from_elastic(self, genre_id: str) -> Optional[GenreShort]:
+    async def _get_genre_from_elastic(self, genre_id: UUID) -> Optional[GenreShort]:
         try:
             doc = await self.elastic.get(index='genres', id=genre_id)
 
@@ -52,34 +54,31 @@ class GenreService:
             return None
 
         try:
-            popularity = self._get_popularity_from_elastic(genre_id)
+            popularity = await self._get_popularity_from_elastic(genre_id)
 
         except NotFoundError:
             return None
 
-        return Genre(**doc, popularity=popularity)
+        return Genre(**doc.body['_source'], popularity=popularity)
 
-    async def _get_popularity_from_elastic(self, genre_id: str) -> float:
+    async def _get_popularity_from_elastic(self, genre_id: UUID) -> float:
         query = {
-            "query": {
-                "bool": {
-                    "must": [
-                        {"exists": {"field": "imdb_rating"}},
-                        {
-                            "nested": {
-                                "path": "genres",
-                                "query": {"match": {"genres.id": genre_id}},
-                            }
-                        },
-                    ]
-                }
-            },
-            "aggs": {"avg_imdb_rating": {"avg": {"field": "imdb_rating"}}},
+            "bool": {
+                "must": [
+                    {"exists": {"field": "imdb_rating"}},
+                    {
+                        "nested": {
+                            "path": "genres",
+                            "query": {"match": {"genres.id": genre_id}},
+                        }
+                    },
+                ]
+            }
         }
-        body = {"query": query, "size": 1}
+        aggs = {"avg_imdb_rating": {"avg": {"field": "imdb_rating"}}}
 
         try:
-            results = await self.elastic.search(index="genres", body=body)
+            results = await self.elastic.search(index="movies", query=query, aggs=aggs)
 
         except NotFoundError:
             return None
@@ -96,7 +95,7 @@ class GenreService:
         except NotFoundError:
             return None
 
-        return [GenreShort(**hit)["_source"] for hit in doc["hits"]["hits"]]
+        return list(GenreShort(**hit["_source"]) for hit in doc.body['hits']['hits'])
 
     async def _get_genre_from_cache(self, genre_id: str) -> Optional[Genre]:
         ...

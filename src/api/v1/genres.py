@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -10,7 +11,7 @@ router = APIRouter()
 
 @router.get("/{genre_id}", response_model=Genre)
 async def genre_details(
-    genre_id: str, genre_service: GenreService = Depends(get_genres_service)
+    genre_id: UUID, genre_service: GenreService = Depends(get_genres_service)
 ) -> Genre:
     genre = await genre_service.get_by_id(genre_id)
 

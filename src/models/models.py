@@ -9,7 +9,7 @@ class GenreShort(UUIDMixin, JSONConfigMixin):
 
 class FilmShort(UUIDMixin, JSONConfigMixin):
     title: str
-    imdb_rating: float
+    imdb_rating: float | None = None
 
 
 class PersonShort(UUIDMixin, JSONConfigMixin):
@@ -17,13 +17,13 @@ class PersonShort(UUIDMixin, JSONConfigMixin):
 
 
 class Genre(GenreShort):
-    popularity: float
-    description: str
+    popularity: float | None = None
+    description: str | None = None
 
 
 class Film(FilmShort):
-    description: str
-    creation_date: datetime
+    description: str | None = None
+    creation_date: datetime | None = None
     genre: list[GenreShort]
     actors: list[PersonShort]
     writers: list[PersonShort]
