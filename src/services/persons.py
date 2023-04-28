@@ -37,14 +37,14 @@ class PersonService:
         """Поиск по персонам."""
         return await self._get_persons_from_elastic(name, page_size, page_number)
 
-    async def _get_person_from_elastic(self, person_id: UUID | str) -> Person | None:
+    async def _get_person_from_elastic(self, person_id: UUID) -> Person | None:
         try:
-            doc = await self.elastic.get(index='persons', id=str(person_id))
+            doc = await self.elastic.get(index='persons', id=person_id)
 
         except NotFoundError:
             return None
 
-        return PersonShort(**doc['_source'])
+        return PersonShort(**doc.body['_source'])
 
     async def _get_persons_from_elastic(
         self, name: str, page_size: int | None, page_number: int | None

@@ -32,7 +32,7 @@ async def person_details(
     if films is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
 
-    return Person(**person, films=films)
+    return Person(**dict(person), films=films)
 
 
 @router.get("/search", response_model=list[Person])

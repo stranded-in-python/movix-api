@@ -30,7 +30,7 @@ class Film(FilmShort):
     directors: list[PersonShort]
 
 
-class FilmRoles(UUIDMixin, JSONConfigMixin):
+class FilmRoles(FilmShort, JSONConfigMixin):
     roles: list[str]
 
 

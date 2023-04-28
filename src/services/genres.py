@@ -18,7 +18,7 @@ class GenreService:
         self.redis = redis
         self.elastic = elastic
 
-    async def get_by_id(self, genre_id: UUID) -> Optional[Genre]:
+    async def get_by_id(self, genre_id: UUID) -> Genre | None:
         """Данные по конкретному жанру."""
         genre = await self._get_genre_from_cache(genre_id)
 
@@ -32,7 +32,7 @@ class GenreService:
 
         return genre
 
-    async def get_genres(self) -> Optional[list[Genre]]:
+    async def get_genres(self) -> list[Genre] | None:
         """Получить список жанров"""
         genres = await self._get_genres_from_cache()
 
@@ -46,7 +46,7 @@ class GenreService:
 
         return genres
 
-    async def _get_genre_from_elastic(self, genre_id: UUID) -> Optional[GenreShort]:
+    async def _get_genre_from_elastic(self, genre_id: UUID) -> GenreShort | None:
         try:
             doc = await self.elastic.get(index='genres', id=genre_id)
 
@@ -61,7 +61,7 @@ class GenreService:
 
         return Genre(**doc.body['_source'], popularity=popularity)
 
-    async def _get_popularity_from_elastic(self, genre_id: UUID) -> float:
+    async def _get_popularity_from_elastic(self, genre_id: UUID) -> float | None:
         query = {
             "bool": {
                 "must": [
@@ -85,7 +85,7 @@ class GenreService:
 
         return results["aggregations"]["avg_imdb_rating"]["value"]
 
-    async def _get_genres_from_elastic(self) -> Optional[list[Genre]]:
+    async def _get_genres_from_elastic(self) -> list[Genre] | None:
         query = {"match_all": {}}
         source = ["id", "name"]
 

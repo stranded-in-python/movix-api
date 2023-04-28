@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Optional
+from uuid import UUID
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
@@ -7,7 +8,7 @@ from redis.asyncio import Redis
 
 from db.elastic import get_elastic
 from db.redis import get_redis
-from models.models import Film, FilmShort
+from models.models import Film, FilmRoles, FilmShort
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
@@ -160,20 +161,73 @@ class FilmService:
         return [FilmShort(**hit["fields"]) for hit in doc["hits"]["hits"]]
 
     async def get_films_by_person(
-        self, person_id: str, page_size: int | None, page_number: int | None
+        self, person_id: UUID, page_size: int | None, page_number: int | None
     ) -> Optional[FilmShort]:
+        def parse_to_roles(inner_hits: dict) -> list[str]:
+            roles = list()
+
+            for name, hit in inner_hits.items():
+                if name == "writers_inner_hits" and hit["hits"]["total"]["value"] > 0:
+                    roles.append("writer")
+
+                elif name == "actors_inner_hits" and hit["hits"]["total"]["value"] > 0:
+                    roles.append("actor")
+
+                elif (
+                    name == "directors_inner_hits" and hit["hits"]["total"]["value"] > 0
+                ):
+                    roles.append("director")
+
+            return roles
+
         try:
-            query = {"match": {"id": person_id}}
-            body = {
-                "from": page_number,
-                "size": page_size,
-                "query": query,
-                "_source": ["id", "imdb_rating", "title"],
+            query = {
+                "bool": {
+                    "should": [
+                        {
+                            "nested": {
+                                "path": "actors",
+                                "query": {"match": {"actors.id": person_id}},
+                                "inner_hits": {"name": "actors_inner_hits", "size": 0},
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "writers",
+                                "query": {"match": {"writers.id": person_id}},
+                                "inner_hits": {"name": "writers_inner_hits", "size": 0},
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "directors",
+                                "query": {"match": {"directors.id": person_id}},
+                                "inner_hits": {
+                                    "name": "directors_inner_hits",
+                                    "size": 0,
+                                },
+                            }
+                        },
+                    ]
+                }
             }
-            doc = await self.elastic.search(index="movies", body=body)
+            source = ["id", "imdb_rating", "title"]
+
+            doc = await self.elastic.search(
+                index="movies",
+                query=query,
+                source=source,
+                size=page_size,
+                from_=page_number,
+            )
+
         except NotFoundError:
             return None
-        return [FilmShort(**hit["fields"]) for hit in doc["hits"]["hits"]]
+
+        return [
+            FilmRoles(**hit["_source"], roles=parse_to_roles(hit["inner_hits"]))
+            for hit in doc["hits"]["hits"]
+        ]
 
 
 @lru_cache
