@@ -93,6 +93,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ghcr.io/stranded-in-python/movix-api:latest
+
           labels: |
             maintainer=${{ github.actor }}
             build-date=${{ github.event.head_commit.timestamp }}
