@@ -1,19 +1,13 @@
 from datetime import datetime, timedelta
-from typing import Any, Callable
-from urllib.parse import quote_plus
-
-from fastapi import Request
+from functools import wraps
+from json import dumps
+from typing import Callable
 
 from core.config import settings
 from db.redis import Cache
 
 
-def expired(cached: dict[str, Any]) -> bool:
-    timestamp = cached.get('timestamp')
-
-    if not timestamp:
-        raise Exception
-
+def expired(timestamp: datetime) -> bool:
     delta = timedelta(seconds=settings.cache_expiration_in_seconds)
     if datetime.now() - timestamp >= delta:
         return True
@@ -21,27 +15,28 @@ def expired(cached: dict[str, Any]) -> bool:
     return False
 
 
-def prepare_url_query(request: Request) -> str:
-    url = request.url.path + "?"
-    for param, value in request.query_params.items():
-        if not url.endswith("?"):
-            url = url + "&"
-        url = f"{url}{param}={quote_plus(value)}"
-    return url
+def prepare_key(func: Callable, *args, **kwargs) -> str:
+    key = {'callable': func.__name__, 'args': args, 'kwargs': sorted(kwargs.items())}
+    return dumps(key)
 
 
-def cache(func) -> Callable:
-    async def inner(*args, request: Request, **kwargs):
-        url_query = prepare_url_query(request)
-        cached_response = await Cache.get(url_query)
-        response = cached_response.get('response')
-        if expired(cached_response):
-            response = await func(*args, **kwargs)
-            Cache.set(url_query, response)
+def cache_decorator(cache_storage: Cache) -> Callable:
+    """
+    Декоратор для кэширования результатов вызываемого объекта
+    """
 
-        if not response:
-            raise Exception
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def inner(*args, **kwargs):
+            key = prepare_key(func, *args, **kwargs)
+            cached_response = await cache_storage.get(key)
+            response = cached_response.get('response') if cached_response else None
+            if not response or expired(cached_response.get('timestamp')):
+                response = await func(*args, **kwargs)
+                state = {'timestamp': datetime.now(), 'response': response}
+                await cache_storage.set(key, state)
+            return response
 
-        return response
+        return inner
 
-    return inner
+    return decorator

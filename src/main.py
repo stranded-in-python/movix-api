@@ -1,15 +1,13 @@
 import uvicorn
-from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
-from redis.asyncio import Redis
 
 from api.v1 import films, genres, persons
-from core import config
+from core.config import settings
 from db import elastic, redis
 
 app = FastAPI(
-    title=config.settings.project_name,
+    title=settings.project_name,
     docs_url="/api/openapi",
     openapi_url="/api/openapi.json",
     default_response_class=ORJSONResponse,
@@ -18,17 +16,19 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup():
-    redis.redis = Redis(
-        host=config.settings.redis_host, port=config.settings.redis_port
-    )
-    elastic.es = AsyncElasticsearch(hosts=[f"{config.settings.elastic_endpoint}"])
+    redis_manager = await redis.get_manager()
+    await redis_manager.on_startup()
+    elastic_manager = await elastic.get_manager()
+    await elastic_manager.on_startup()
 
 
 @app.on_event("shutdown")
 async def shutdown():
     # Отключаемся от баз при выключении сервера
-    await redis.redis.close()
-    await elastic.es.close()  # type: ignore
+    redis_manager = await redis.get_manager()
+    await redis_manager.on_shutdown()
+    elastic_manager = await elastic.get_manager()
+    await elastic_manager.on_shutdown()  # type: ignore
 
 
 app.include_router(films.router, prefix="/api/v1/films", tags=["films"])
@@ -38,5 +38,5 @@ app.include_router(persons.router, prefix="/api/v1/persons", tags=["persons"])
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app", host="0.0.0.0", port=8800, reload=True, reload_dirs=['/app']
+        "main:app", host="0.0.0.0", port=8000, reload=True, reload_dirs=['/app']
     )

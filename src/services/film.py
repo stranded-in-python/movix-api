@@ -2,20 +2,18 @@ from functools import lru_cache
 from typing import Optional
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
+from elasticsearch import NotFoundError
 
-from db.elastic import get_elastic
-from db.redis import get_redis
+from db.elastic import ElasticManager
+from db.elastic import get_manager as get_elastic_manager
+from db.redis import get_cache
 from models.models import Film, FilmRoles, FilmShort
 
-FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
+from .cache import cache_decorator
 
 
 class FilmService:
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
+    def __init__(self, elastic: ElasticManager):
         self.elastic = elastic
         self.person_fields = {
             "actors_inner_hits": "actor",
@@ -24,32 +22,17 @@ class FilmService:
         }
 
     async def get_by_id(self, film_id: str) -> Optional[Film]:
-        film = await self._film_from_cache(film_id)
-        if not film:
-            film = await self._get_film_from_elastic(film_id)
-            if not film:
-                return None
-            await self._put_film_to_cache(film)
-
+        film = await self._get_film_from_elastic(film_id)
         return film
 
+    @cache_decorator(get_cache())
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
+        elastic = self.elastic.get_client()
         try:
-            doc = await self.elastic.get('movies', film_id)
+            doc = await elastic.get('movies', film_id)
         except NotFoundError:
             return None
         return Film(**doc['_source'])
-
-    async def _film_from_cache(self, film_id: str) -> Optional[Film]:
-        data = await self.redis.get(film_id)
-        if not data:
-            return None
-
-        film = Film.parse_raw(data)
-        return film
-
-    async def _put_film_to_cache(self, film: Film):
-        await self.redis.set(film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
 
     # Serge пока(?) без редис
     async def get_films(
@@ -278,8 +261,5 @@ class FilmService:
 
 
 @lru_cache
-def get_film_service(
-    redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> FilmService:
-    return FilmService(redis, elastic)
+async def get_film_service() -> FilmService:
+    return FilmService(get_elastic_manager())
