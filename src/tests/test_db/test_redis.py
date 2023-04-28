@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import fakeredis
 import pytest
 
-from db.redis import Cache, CacheError, RedisClient, RedisManager, get_manager
+from db.redis import Cache, RedisClient, RedisManager, get_manager
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ async def test_redis_client_ping(redis_client):
 async def test_get_manager_returns_instance(redis_manager):
     with patch.object(RedisManager, "get") as mocked_get:
         mocked_get.return_value = redis_manager
-        manager = await get_manager()
+        manager = get_manager()
         assert manager == redis_manager
 
 
@@ -48,7 +48,7 @@ async def test_get_manager_creates_new_instance(redis_manager, redis_client):
         mocked_manager_get.return_value = None
         mocked_manager_new.return_value = redis_manager
         mocked_client_new.return_value = redis_client
-        manager = await get_manager()
+        manager = get_manager()
         assert manager == redis_manager
 
 

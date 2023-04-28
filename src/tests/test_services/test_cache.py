@@ -61,7 +61,7 @@ async def test_cache_decorator_returns_cached_value(cache_storage, func):
         'response': 'cached_response',
     }
 
-    result = await cache_decorator(func, cache_storage)(1, 2, a=3, b=4)
+    result = await cache_decorator(cache_storage)(func)(1, 2, a=3, b=4)
 
     cache_storage.get.assert_called_once_with(key)
     func.assert_not_called()
@@ -76,7 +76,7 @@ async def test_cache_decorator_calls_decorated_function_and_caches_response(
     cache_storage.get.return_value = None
     func.return_value = 'new_response'
 
-    result = await cache_decorator(func, cache_storage)(1, 2, a=3, b=4)
+    result = await cache_decorator(cache_storage)(func)(1, 2, a=3, b=4)
 
     cache_storage.get.assert_called_once_with(key)
     func.assert_called_once_with(1, 2, a=3, b=4)
@@ -95,7 +95,7 @@ async def test_cache_decorator_raises_exception_if_cached_value_has_expired(
     }
     func.return_value = 'new_response'
 
-    result = await cache_decorator(func, cache_storage)(1, 2, a=3, b=4)
+    result = await cache_decorator(cache_storage)(func)(1, 2, a=3, b=4)
 
     cache_storage.get.assert_called_once_with(key)
     func.assert_called_once_with(1, 2, a=3, b=4)

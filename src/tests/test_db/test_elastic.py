@@ -30,7 +30,7 @@ async def test_elastic_client_ping(elastic_client):
 async def test_get_manager_returns_instance(elastic_manager):
     with patch.object(ElasticManager, "get") as mocked_get:
         mocked_get.return_value = elastic_manager
-        manager = await get_manager()
+        manager = get_manager()
         assert manager == elastic_manager
 
 
@@ -48,5 +48,5 @@ async def test_get_manager_creates_new_instance(elastic_manager, elastic_client)
         mocked_manager_get.return_value = None
         mocked_manager_new.return_value = elastic_manager
         mocked_client_new.return_value = elastic_client
-        manager = await get_manager()
+        manager = get_manager()
         assert manager == elastic_manager

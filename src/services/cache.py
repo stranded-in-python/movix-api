@@ -20,20 +20,23 @@ def prepare_key(func: Callable, *args, **kwargs) -> str:
     return dumps(key)
 
 
-def cache_decorator(func, cache_storage: Cache) -> Callable:
+def cache_decorator(cache_storage: Cache) -> Callable:
     """
     Декоратор для кэширования результатов вызываемого объекта
     """
 
-    @wraps(func)
-    async def inner(*args, **kwargs):
-        key = prepare_key(func, *args, **kwargs)
-        cached_response = await cache_storage.get(key)
-        response = cached_response.get('response') if cached_response else None
-        if not response or expired(cached_response.get('timestamp')):
-            response = await func(*args, **kwargs)
-            state = {'timestamp': datetime.now(), 'response': response}
-            await cache_storage.set(key, state)
-        return response
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def inner(*args, **kwargs):
+            key = prepare_key(func, *args, **kwargs)
+            cached_response = await cache_storage.get(key)
+            response = cached_response.get('response') if cached_response else None
+            if not response or expired(cached_response.get('timestamp')):
+                response = await func(*args, **kwargs)
+                state = {'timestamp': datetime.now(), 'response': response}
+                await cache_storage.set(key, state)
+            return response
 
-    return inner
+        return inner
+
+    return decorator

@@ -1,18 +1,13 @@
-import logging
-
 import uvicorn
-from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
-from redis.asyncio import Redis
 
 from api.v1 import films
-from core import config
-from core.logger import LOGGING
+from core.config import settings
 from db import elastic, redis
 
 app = FastAPI(
-    title=config.settings.project_name,
+    title=settings.project_name,
     docs_url="/api/openapi",
     openapi_url="/api/openapi.json",
     default_response_class=ORJSONResponse,
@@ -21,22 +16,18 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup():
-    redis_manager = redis.get_manager()
-    redis_manager.on_startup()
-    elastic_manager = elastic.get_manager()
-    elastic_manager.set_client(
-        AsyncElasticsearch(
-            hosts=[f"{config.settings.elastic_host}:{config.settings.elastic_port}"]
-        )
-    )
+    redis_manager = await redis.get_manager()
+    await redis_manager.on_startup()
+    elastic_manager = await elastic.get_manager()
+    await elastic_manager.on_startup()
 
 
 @app.on_event("shutdown")
 async def shutdown():
     # Отключаемся от баз при выключении сервера
-    redis_manager = redis.get_manager()
+    redis_manager = await redis.get_manager()
     await redis_manager.on_shutdown()
-    elastic_manager = elastic.get_manager()
+    elastic_manager = await elastic.get_manager()
     await elastic_manager.on_shutdown()  # type: ignore
 
 

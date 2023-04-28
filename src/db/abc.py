@@ -18,7 +18,7 @@ class Manager(metaclass=Singleton):
 
     @classmethod
     def get(cls: type['Manager']):
-        return cls._instance
+        return cls._instances.get(cls)
 
     async def on_shutdown(self):
         await self._client.close()

@@ -31,7 +31,7 @@ class ElasticManager(Manager):
         await self._client.ping()
 
 
-async def get_manager() -> ElasticManager:
+def get_manager() -> ElasticManager:
     """
     Получить instance менеджера
     """

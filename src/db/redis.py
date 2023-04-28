@@ -36,7 +36,7 @@ class RedisManager(Manager):
         await self._client.ping()
 
 
-async def get_manager() -> RedisManager:
+def get_manager() -> RedisManager:
     """
     Метод для получения инстанса менеджера
     """
@@ -92,10 +92,10 @@ class Cache(metaclass=Singleton):
         await self.redis.set(key, state)
 
 
-async def get_cache() -> Cache:
+def get_cache() -> Cache:
     """
     Получить инстанс Cache
     """
-    redis_manager = await get_manager()
+    redis_manager = get_manager()
     redis = redis_manager.get_client()
     return Cache(redis)
