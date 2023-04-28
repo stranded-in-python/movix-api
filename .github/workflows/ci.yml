@@ -86,10 +86,14 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.TOKEN }}
 
+      - name: Copy .dockerignore
+        run: |
+          cp ./compose/production/api/.dockerignore ./
+
       - name: Build Docker image
         uses: docker/build-push-action@v4
         with:
-          context: "./compose/production/api"
+          file: "./compose/production/api/Dockerfile"
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ghcr.io/stranded-in-python/movix-api:latest
