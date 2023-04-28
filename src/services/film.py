@@ -47,13 +47,12 @@ class FilmService:
     async def _put_film_to_cache(self, film: Film):
         await self.redis.set(film.uuid, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
 
-    # Serge пока(?) без редис
     async def get_films(
         self,
         sort: str,
         page_size: int,
         page_number: int,
-        genre_name: str,
+        genre_id: str,
         similar_to: str,
     ) -> Optional[FilmShort]:
         if sort[0] == "-":
@@ -63,18 +62,15 @@ class FilmService:
         else:
             return None
         sort = sort[1:]
-        if genre_name and not similar_to:
-            print("get_films_by_genre")
+        if genre_id and not similar_to:
             films = await self.get_films_by_genre(
-                order, sort, page_size, page_number, genre_name
+                order, sort, page_size, page_number, genre_id
             )
         elif similar_to:
-            print("get_similar_films")
             films = await self.get_similar_films(
                 order, sort, page_size, page_number, similar_to
             )
         else:
-            print("_get_films_from_elastic")
             films = await self._get_films_from_elastic(
                 order, sort, page_number, page_size
             )
@@ -83,12 +79,25 @@ class FilmService:
         return films
 
     async def get_films_by_genre(
-        self, order: str, sort: str, page_size: int, page_number: int, genre_name: str
+        self, order: str, sort: str, page_size: int, page_number: int, genre_id: str
     ) -> Optional[FilmShort]:
         query = {
-            "bool": {
-                "filter": [{"terms": {"genre": [genre_name]}}]
-            }  # ! пока что genre_name. Должен быть id
+                "bool": {
+                "must": [
+                    {
+                    "nested": {
+                        "path": "genres",
+                        "query": {
+                        "bool": {
+                            "must": [
+                            { "match": { "genres.id": genre_id } }
+                            ]
+                        }
+                        }
+                    }
+                    }
+                ]
+                }
         }
         body = {
             "from": page_number,
@@ -113,12 +122,11 @@ class FilmService:
             doc = await self.elastic.get(index='movies', id=film_id)
         except NotFoundError:
             return None
-        # genres_to_search = Film(**doc['_source']).genres
         genres_to_search = [elem['name'] for elem in doc['_source']['genres']]
         query = {
             "bool": {
                 "filter": [{"terms": {"genre": genres_to_search}}]
-            }  # ! пока что genre_name. Должен быть id
+            }
         }
         body = {
             "from": page_number,
@@ -159,7 +167,6 @@ class FilmService:
     async def get_by_query(
         self, query: str, page_number: int, page_size: int
     ) -> Optional[FilmShort]:
-        print('get_qfilm_from_')
         film = await self._get_qfilm_from_elastic(query, page_number, page_size)
         if not film:
             return None
@@ -168,7 +175,6 @@ class FilmService:
     async def _get_qfilm_from_elastic(
         self, film_name: str, page_number: int, page_size: int
     ) -> Optional[FilmShort]:
-        print(film_name)
         try:
             query = {"match": {"title": film_name}}
             body = {

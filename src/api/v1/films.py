@@ -23,7 +23,7 @@ class FilmDetailed(Film):
     directors: list
 
 
-@router.get("/{film_id}", response_model=FilmDetailed)
+@router.get("/{film_id}", response_model=FilmDetailed, description="Search Film by ID")
 async def film_details(
     film_id: str, film_service: FilmService = Depends(get_film_service)
 ) -> FilmDetailed:
@@ -41,18 +41,17 @@ async def film_details(
         directors=film.directors,
     )
 
-@router.get("/", response_model=list[Film])
+@router.get("/", response_model=list[Film], description="Get Films List")
 async def film_list(
     sort: str,
     page_size: int,
     page_number: int,
-    genre_name=None,  # должен быть id
+    genre_id=None,  # должен быть id
     similar_to=None,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
-    print('started /')
     films = await film_service.get_films(
-        sort, page_size, page_number, genre_name, similar_to
+        sort, page_size, page_number, genre_id, similar_to
     )
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
@@ -61,14 +60,13 @@ async def film_list(
     return films_to_return
 
 
-@router.get("/search/", response_model=list[Film])
+@router.get("/search/", response_model=list[Film], description="Search Films by Title")
 async def film_list_query(
     query: str,
     page_number: int,
     page_size: int,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
-    print('start search')
     films = await film_service.get_by_query(query, page_number, page_size)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
