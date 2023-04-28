@@ -41,13 +41,6 @@ async def film_details(
         directors=film.directors,
     )
 
-
-# Serge
-# Проблемы
-# 1.Запиливал, исходя из схемы предыдущего спринта. У жанров нет айдишников, поэтому сделал пока
-# пока genre_name
-# 2. Не использовал redis. Несколько объектов можно из него вытягивать так
-# https://redis.io/commands/json.mget/
 @router.get("/", response_model=list[Film])
 async def film_list(
     sort: str,
@@ -57,6 +50,7 @@ async def film_list(
     similar_to=None,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
+    print('started /')
     films = await film_service.get_films(
         sort, page_size, page_number, genre_name, similar_to
     )
@@ -67,14 +61,16 @@ async def film_list(
     return films_to_return
 
 
-@router.get("/search", response_model=list[Film])
-async def film_list(
+@router.get("/search/", response_model=list[Film])
+async def film_list_query(
     query: str,
     page_number: int,
     page_size: int,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
-    film = await film_service.get_by_query(query, page_number, page_size)
-    if not film:
+    print('start search')
+    films = await film_service.get_by_query(query, page_number, page_size)
+    if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
-    return film
+    films_to_return = [Film(uuid=film.uuid, title=film.title, imdb_rating=film.imdb_rating) for film in films]
+    return films_to_return

@@ -159,14 +159,16 @@ class FilmService:
     async def get_by_query(
         self, query: str, page_number: int, page_size: int
     ) -> Optional[FilmShort]:
+        print('get_qfilm_from_')
         film = await self._get_qfilm_from_elastic(query, page_number, page_size)
         if not film:
             return None
         return film
 
-    async def get_qfilm_from_elastic(
+    async def _get_qfilm_from_elastic(
         self, film_name: str, page_number: int, page_size: int
     ) -> Optional[FilmShort]:
+        print(film_name)
         try:
             query = {"match": {"title": film_name}}
             body = {
@@ -178,7 +180,9 @@ class FilmService:
             doc = await self.elastic.search(index="movies", body=body)
         except NotFoundError:
             return None
-        return [FilmShort(**hit["fields"]) for hit in doc["hits"]["hits"]]
+        films_raw = [hit["_source"] for hit in doc["hits"]["hits"]]
+        to_return = [FilmShort(**elem) for elem in films_raw]
+        return to_return
 
 
 @lru_cache
