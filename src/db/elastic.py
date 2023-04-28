@@ -8,11 +8,18 @@ from .abc import Client, Manager
 
 
 class ElasticClient(AsyncElasticsearch, Client):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    """
+    Обёртка для ElasticSearch
+    """
+
+    ...
 
 
 class ElasticManager(Manager):
+    """
+    Singleton для управления соединением с elasticsearch
+    """
+
     def __init__(self, client: ElasticClient):
         super().__init__(client)
         self._client: ElasticClient
@@ -25,6 +32,10 @@ class ElasticManager(Manager):
 
 
 async def get_manager() -> ElasticManager:
+    """
+    Получить instance менеджера
+    """
+
     manager: Manager | None = cast(ElasticManager, ElasticManager.get())
     if manager is None:
         manager = ElasticManager(ElasticClient(hosts=[settings.elastic_endpoint]))

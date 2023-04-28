@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Union
 
 from core.utils import Singleton
 
@@ -10,7 +11,7 @@ class Client(ABC):
 
 
 class Manager(metaclass=Singleton):
-    _instance: 'Manager' | None
+    _instance: Union['Manager', None]
 
     def __init__(self, client: Client):
         self._client = client

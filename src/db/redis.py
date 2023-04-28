@@ -13,11 +13,18 @@ redis: Optional[Redis] = None
 
 
 class RedisClient(Redis, Client):
-    def __init__(*args, **kwargs):
-        super().__init__(*args, **kwargs)
+    """
+    Обёртка для redis
+    """
+
+    ...
 
 
 class RedisManager(Manager):
+    """
+    Singleton для обертки соединения к Redis
+    """
+
     def __init__(self, client: RedisClient):
         super().__init__(client)
         self._client: RedisClient
@@ -30,6 +37,10 @@ class RedisManager(Manager):
 
 
 async def get_manager() -> RedisManager:
+    """
+    Метод для получения инстанса менеджера
+    """
+
     manager: Manager | None = cast(RedisManager, RedisManager.get())
     if manager is None:
         manager = RedisManager(
@@ -39,6 +50,10 @@ async def get_manager() -> RedisManager:
 
 
 class CacheError(Exception):
+    """
+    Базовая ошибка кэширования
+    """
+
     ...
 
 
@@ -60,7 +75,7 @@ class Cache(metaclass=Singleton):
         try:
             if not isinstance(serialized, (bytes, bytearray, memoryview)):
                 raise TypeError(f"Failed to deserialize value for key {key}")
-            value = await pickle.loads(serialized)
+            value = pickle.loads(serialized)
         except TypeError or pickle.PicklingError as e:
             logging.error(e)
         return value
@@ -78,6 +93,9 @@ class Cache(metaclass=Singleton):
 
 
 async def get_cache() -> Cache:
+    """
+    Получить инстанс Cache
+    """
     redis_manager = await get_manager()
     redis = redis_manager.get_client()
     return Cache(redis)

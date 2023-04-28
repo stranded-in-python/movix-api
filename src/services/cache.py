@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from functools import wraps
 from json import dumps
-from typing import Any, Callable
+from typing import Callable
 
 from core.config import settings
-from db.redis import Cache
+from db.redis import Cache, CacheError
 
 
 def expired(timestamp: datetime) -> bool:
@@ -16,23 +16,24 @@ def expired(timestamp: datetime) -> bool:
 
 
 def prepare_key(func: Callable, *args, **kwargs) -> str:
-    key = {'func': str(type(func)), 'args': args, 'kwargs': sorted(kwargs.items())}
+    key = {'callable': func.__name__, 'args': args, 'kwargs': sorted(kwargs.items())}
     return dumps(key)
 
 
-def cache(func, cache_storage: Cache) -> Callable:
+def cache_decorator(func, cache_storage: Cache) -> Callable:
+    """
+    Декоратор для кэширования результатов вызываемого объекта
+    """
+
     @wraps(func)
     async def inner(*args, **kwargs):
         key = prepare_key(func, *args, **kwargs)
         cached_response = await cache_storage.get(key)
-        response = cached_response.get('response')
-        if expired(cached_response.get('timestamp')):
+        response = cached_response.get('response') if cached_response else None
+        if not response or expired(cached_response.get('timestamp')):
             response = await func(*args, **kwargs)
             state = {'timestamp': datetime.now(), 'response': response}
             await cache_storage.set(key, state)
-        if not response:
-            raise Exception
-
         return response
 
     return inner
