@@ -62,6 +62,6 @@ RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
 # copy application code to WORKDIR
-COPY --exclude=tests ./src ${APP_HOME}
+COPY ./src ${APP_HOME}
 
 ENTRYPOINT ["/entrypoint"]
