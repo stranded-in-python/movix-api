@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 class Film(BaseModel):
-    id: str
+    uuid: str
     title: str
     imdb_rating: float
 
@@ -23,20 +23,19 @@ class FilmDetailed(Film):
     directors: list
 
 
-@router.get("/{film_id}", response_model=Film)
+@router.get("/{film_id}", response_model=FilmDetailed)
 async def film_details(
     film_id: str, film_service: FilmService = Depends(get_film_service)
-) -> Film:
+) -> FilmDetailed:
     film = await film_service.get_by_id(film_id)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
-
     return FilmDetailed(
-        id=film.id,
+        uuid=film.uuid,
         title=film.title,
         imdb_rating=film.imdb_rating,
         description=film.description,
-        genre=film.genre,
+        genre=film.genres,
         actors=film.actors,
         writers=film.writers,
         directors=film.directors,
@@ -49,7 +48,7 @@ async def film_details(
 # пока genre_name
 # 2. Не использовал redis. Несколько объектов можно из него вытягивать так
 # https://redis.io/commands/json.mget/
-@router.get("/films", response_model=list[Film])
+@router.get("/", response_model=list[Film])
 async def film_list(
     sort: str,
     page_size: int,
@@ -63,7 +62,9 @@ async def film_list(
     )
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
-    return films
+
+    films_to_return = [Film(uuid=film.uuid, title=film.title, imdb_rating=film.imdb_rating) for film in films]
+    return films_to_return
 
 
 @router.get("/search", response_model=list[Film])

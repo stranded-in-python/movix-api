@@ -23,8 +23,7 @@ class Genre(GenreShort):
 
 class Film(FilmShort):
     description: str
-    creation_date: datetime
-    genre: list[GenreShort]
+    genres: list[GenreShort]
     actors: list[PersonShort]
     writers: list[PersonShort]
     directors: list[PersonShort]

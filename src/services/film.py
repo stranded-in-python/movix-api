@@ -1,7 +1,8 @@
+import logging
 from functools import lru_cache
 from typing import Optional
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from elasticsearch import AsyncElasticsearch, NotFoundError, BadRequestError
 from fastapi import Depends
 from redis.asyncio import Redis
 
@@ -29,21 +30,22 @@ class FilmService:
 
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
         try:
-            doc = await self.elastic.get('movies', film_id)
+            doc = await self.elastic.get(index='movies', id=film_id)
         except NotFoundError:
             return None
         return Film(**doc['_source'])
 
     async def _film_from_cache(self, film_id: str) -> Optional[Film]:
-        data = await self.redis.get(film_id)
-        if not data:
-            return None
+        # data = await self.redis.get(film_id)
+        # if not data:
+        #     return None
 
-        film = Film.parse_raw(data)
-        return film
+        # film = Film.parse_raw(data)
+        # return film
+        pass
 
     async def _put_film_to_cache(self, film: Film):
-        await self.redis.set(film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(film.uuid, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
 
     # Serge пока(?) без редис
     async def get_films(
@@ -54,23 +56,34 @@ class FilmService:
         genre_name: str,
         similar_to: str,
     ) -> Optional[FilmShort]:
+        if sort[0] == "-":
+            order = "desc"
+        elif sort[0] == '+':
+            order = "asc"
+        else:
+            return None
+        sort = sort[1:]
         if genre_name and not similar_to:
+            print("get_films_by_genre")
             films = await self.get_films_by_genre(
-                sort, page_size, page_number, genre_name
+                order, sort, page_size, page_number, genre_name
             )
         elif similar_to:
+            print("get_similar_films")
             films = await self.get_similar_films(
-                sort, page_size, page_number, similar_to
+                order, sort, page_size, page_number, similar_to
             )
-        films = await self._get_films_from_elastic(
-            sort, page_size, page_number, genre_name, similar_to
-        )
+        else:
+            print("_get_films_from_elastic")
+            films = await self._get_films_from_elastic(
+                order, sort, page_number, page_size
+            )
         if not films:
             return None
         return films
 
     async def get_films_by_genre(
-        self, sort: str, page_size: int, page_number: int, genre_name: str
+        self, order: str, sort: str, page_size: int, page_number: int, genre_name: str
     ) -> Optional[FilmShort]:
         query = {
             "bool": {
@@ -85,20 +98,23 @@ class FilmService:
         }
         try:
             doc = await self.elastic.search(
-                index="movies", body=body, sort=f"{sort}:desc"
+                index="movies", body=body, sort=f"{sort}:{order}"
             )
         except NotFoundError:
             return None
-        return [FilmShort(**hit)["_source"] for hit in doc["hits"]["hits"]]
+        films_raw = [hit["_source"] for hit in doc["hits"]["hits"]]
+        to_return = [FilmShort(**elem) for elem in films_raw]
+        return to_return
 
     async def get_similar_films(
-        self, sort: str, page_size: int, page_number: int, film_id: str
+        self, order: str, sort: str, page_size: int, page_number: int, film_id: str
     ) -> Optional[FilmShort]:
         try:
-            doc = await self.elastic.get('movies', film_id)
+            doc = await self.elastic.get(index='movies', id=film_id)
         except NotFoundError:
             return None
-        genres_to_search = Film(**doc['_source']).genre
+        # genres_to_search = Film(**doc['_source']).genres
+        genres_to_search = [elem['name'] for elem in doc['_source']['genres']]
         query = {
             "bool": {
                 "filter": [{"terms": {"genre": genres_to_search}}]
@@ -112,13 +128,16 @@ class FilmService:
         }
         try:
             doc = await self.elastic.search(
-                index="movies", body=body, sort=f"{sort}:desc"
+                index="movies", body=body, sort=f"{sort}:{order}"
             )
         except NotFoundError:
             return None
+        films_raw = [hit["_source"] for hit in doc["hits"]["hits"]]
+        to_return = [FilmShort(**elem) for elem in films_raw]
+        return to_return
 
     async def _get_films_from_elastic(
-        self, sort: str, page_number: int, page_size: int, genre_name, similar_to
+        self, order: str, sort: str, page_number: int, page_size: int
     ) -> Optional[FilmShort]:
         query = {"match_all": {}}
         body = {
@@ -129,11 +148,13 @@ class FilmService:
         }
         try:
             doc = await self.elastic.search(
-                index="movies", body=body, sort=f"{sort}:desc"
+                index="movies", body=body, sort=f"{sort}:{order}"
             )
         except NotFoundError:
             return None
-        return [FilmShort(**hit)["_source"] for hit in doc["hits"]["hits"]]
+        films_raw = [hit["_source"] for hit in doc["hits"]["hits"]]
+        to_return = [FilmShort(**elem) for elem in films_raw]
+        return to_return
 
     async def get_by_query(
         self, query: str, page_number: int, page_size: int
