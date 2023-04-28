@@ -32,8 +32,8 @@ class PersonService:
         return person
 
     async def get_by_query(
-        self, name: str, page_size: int | None, page_number: int | None
-    ) -> list[Person]:
+        self, name: str, page_size: int | None = None, page_number: int | None = None
+    ) -> list[PersonShort]:
         """Поиск по персонам."""
         return await self._get_persons_from_elastic(name, page_size, page_number)
 
@@ -47,23 +47,24 @@ class PersonService:
         return PersonShort(**doc.body['_source'])
 
     async def _get_persons_from_elastic(
-        self, name: str, page_size: int | None, page_number: int | None
-    ):
-        query_text = {"match": {"full_name": {"query": name}}}
-        body = {
-            "from": page_number,
-            "size": page_size,
-            "query": query_text,
-            "_source": ["id", "full_name", "roles", "films"],
-        }
+        self, name: str, page_size: int | None = None, page_number: int | None = None
+    ) -> list[PersonShort]:
+        query = {"match": {"full_name": name}}
+        source = ["id", "full_name"]
 
         try:
-            doc = await self.elastic.search(index="persons", searches=body)
+            doc = await self.elastic.search(
+                index="persons",
+                query=query,
+                source=source,
+                from_=page_number,
+                size=page_size,
+            )
 
         except NotFoundError:
             return None
 
-        return list(Person(**hit)["_source"] for hit in doc["hits"]["hits"])
+        return list(PersonShort(**hit["_source"]) for hit in doc["hits"]["hits"])
 
     async def _person_from_cache(self, person_id: str) -> Person | None:
         ...

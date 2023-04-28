@@ -17,6 +17,11 @@ class FilmService:
     def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
         self.redis = redis
         self.elastic = elastic
+        self.person_fields = {
+            "actors_inner_hits": "actor",
+            "directors_inner_hits": "director",
+            "writers_inner_hits": "writer",
+        }
 
     async def get_by_id(self, film_id: str) -> Optional[Film]:
         film = await self._film_from_cache(film_id)
@@ -160,25 +165,20 @@ class FilmService:
             return None
         return [FilmShort(**hit["fields"]) for hit in doc["hits"]["hits"]]
 
-    async def get_films_by_person(
-        self, person_id: UUID, page_size: int | None, page_number: int | None
-    ) -> Optional[FilmShort]:
-        def parse_to_roles(inner_hits: dict) -> list[str]:
-            roles = list()
+    async def get_films_with_roles_by_person(
+        self,
+        person_id: UUID,
+        page_size: int | None = None,
+        page_number: int | None = None,
+    ) -> list[FilmRoles]:
+        """Получить фильмы персоны с его ролью"""
 
-            for name, hit in inner_hits.items():
-                if name == "writers_inner_hits" and hit["hits"]["total"]["value"] > 0:
-                    roles.append("writer")
-
-                elif name == "actors_inner_hits" and hit["hits"]["total"]["value"] > 0:
-                    roles.append("actor")
-
-                elif (
-                    name == "directors_inner_hits" and hit["hits"]["total"]["value"] > 0
-                ):
-                    roles.append("director")
-
-            return roles
+        def parse_roles(inner_hits: dict) -> list[str]:
+            return list(
+                self.person_fields[name]
+                for name, hit in inner_hits.items()
+                if bool(hit["hits"]["total"]["value"]) and name in self.person_fields
+            )
 
         try:
             query = {
@@ -224,10 +224,57 @@ class FilmService:
         except NotFoundError:
             return None
 
-        return [
-            FilmRoles(**hit["_source"], roles=parse_to_roles(hit["inner_hits"]))
+        return list(
+            FilmRoles(**hit["_source"], roles=parse_roles(hit["inner_hits"]))
             for hit in doc["hits"]["hits"]
-        ]
+        )
+
+    async def get_films_by_person(
+        self,
+        person_id: UUID,
+        page_size: int | None = None,
+        page_number: int | None = None,
+    ) -> list[FilmShort]:
+        """Получить список фильмов в кратком представлении по персоне"""
+        try:
+            query = {
+                "bool": {
+                    "should": [
+                        {
+                            "nested": {
+                                "path": "actors",
+                                "query": {"match": {"actors.id": person_id}},
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "writers",
+                                "query": {"match": {"writers.id": person_id}},
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "directors",
+                                "query": {"match": {"directors.id": person_id}},
+                            }
+                        },
+                    ]
+                }
+            }
+            source = ["id", "imdb_rating", "title"]
+
+            doc = await self.elastic.search(
+                index="movies",
+                query=query,
+                source=source,
+                size=page_size,
+                from_=page_number,
+            )
+
+        except NotFoundError:
+            return None
+
+        return list(FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"])
 
 
 @lru_cache
