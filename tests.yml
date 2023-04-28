@@ -9,5 +9,6 @@ services:
     command: "pytest /app"
     volumes:
       - ./src:/app:z
+    entrypoint: ""
     ports:
       - "8001:8000"
