@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -66,14 +65,16 @@ async def film_list(
     return films
 
 
-@router.get("/search", response_model=list[Film])
-async def film_list(
-    query: str,
-    page_number: int,
-    page_size: int,
-    film_service: FilmService = Depends(get_film_service),
-) -> list[Film]:
-    film = await film_service.get_by_query(query, page_number, page_size)
-    if not film:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
-    return film
+# flake8 F811 redefinition of unused 'film_list' from line 52
+#
+# @router.get("/search", response_model=list[Film])
+# async def film_list(
+#     query: str,
+#     page_number: int,
+#     page_size: int,
+#     film_service: FilmService = Depends(get_film_service),
+# ) -> list[Film]:
+#     film = await film_service.get_by_query(query, page_number, page_size)
+#     if not film:
+#         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
+#     return film
