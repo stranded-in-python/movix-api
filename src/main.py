@@ -21,19 +21,23 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup():
-    redis.redis = Redis(
-        host=config.settings.redis_host, port=config.settings.redis_port
-    )
-    elastic.es = AsyncElasticsearch(
-        hosts=[f"{config.settings.elastic_host}:{config.settings.elastic_port}"]
+    redis_manager = redis.get_manager()
+    redis_manager.on_startup()
+    elastic_manager = elastic.get_manager()
+    elastic_manager.set_client(
+        AsyncElasticsearch(
+            hosts=[f"{config.settings.elastic_host}:{config.settings.elastic_port}"]
+        )
     )
 
 
 @app.on_event("shutdown")
 async def shutdown():
     # Отключаемся от баз при выключении сервера
-    await redis.redis.close()
-    await elastic.es.close()  # type: ignore
+    redis_manager = redis.get_manager()
+    await redis_manager.on_shutdown()
+    elastic_manager = elastic.get_manager()
+    await elastic_manager.on_shutdown()  # type: ignore
 
 
 app.include_router(films.router, prefix="/api/v1/films", tags=["films"])

@@ -1,19 +1,13 @@
 from datetime import datetime, timedelta
+from functools import wraps
+from json import dumps
 from typing import Any, Callable
-from urllib.parse import quote_plus
-
-from fastapi import Request
 
 from core.config import settings
 from db.redis import Cache
 
 
-def expired(cached: dict[str, Any]) -> bool:
-    timestamp = cached.get('timestamp')
-
-    if not timestamp:
-        raise Exception
-
+def expired(timestamp: datetime) -> bool:
     delta = timedelta(seconds=settings.cache_expiration_in_seconds)
     if datetime.now() - timestamp >= delta:
         return True
@@ -21,24 +15,21 @@ def expired(cached: dict[str, Any]) -> bool:
     return False
 
 
-def prepare_url_query(request: Request) -> str:
-    url = request.url.path + "?"
-    for param, value in request.query_params.items():
-        if not url.endswith("?"):
-            url = url + "&"
-        url = f"{url}{param}={quote_plus(value)}"
-    return url
+def prepare_key(func: Callable, *args, **kwargs) -> str:
+    key = {'func': str(type(func)), 'args': args, 'kwargs': sorted(kwargs.items())}
+    return dumps(key)
 
 
-def cache(func) -> Callable:
-    async def inner(*args, request: Request, **kwargs):
-        url_query = prepare_url_query(request)
-        cached_response = await Cache.get(url_query)
+def cache(func, cache_storage: Cache) -> Callable:
+    @wraps(func)
+    async def inner(*args, **kwargs):
+        key = prepare_key(func, *args, **kwargs)
+        cached_response = await cache_storage.get(key)
         response = cached_response.get('response')
-        if expired(cached_response):
+        if expired(cached_response.get('timestamp')):
             response = await func(*args, **kwargs)
-            Cache.set(url_query, response)
-
+            state = {'timestamp': datetime.now(), 'response': response}
+            await cache_storage.set(key, state)
         if not response:
             raise Exception
 
