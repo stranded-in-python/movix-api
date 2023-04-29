@@ -1,35 +1,25 @@
 from functools import lru_cache
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
+from elasticsearch import NotFoundError
 
-from db.elastic import get_elastic
-from db.redis import get_redis
+from db.elastic import ElasticManager
+from db.elastic import get_manager as get_elastic_manager
+from db.redis import get_cache
 from models.models import Person, PersonShort
+
+from .cache import cache_decorator
 
 PERSON_CACHE_EXPIRE_IN_SECONDS = 24 * 60 * 60  # 24 hours
 
 
 class PersonService:
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
-        self.elastic = elastic
+    def __init__(self, elastic: ElasticManager):
+        self.elastic: ElasticManager = elastic
 
-    async def get_by_id(self, person_id: UUID | str) -> PersonShort | None:
+    async def get_by_id(self, person_id: UUID) -> PersonShort | None:
         """Данные по персоне."""
-        person = await self._person_from_cache(person_id)
-
-        if not person:
-            person = await self._get_person_from_elastic(person_id)
-
-            if not person:
-                return None
-
-            await self._put_person_to_cache(person)
-
-        return person
+        return await self._get_person_from_elastic(person_id)
 
     async def get_by_query(
         self, name: str, page_size: int | None = None, page_number: int | None = None
@@ -37,6 +27,7 @@ class PersonService:
         """Поиск по персонам."""
         return await self._get_persons_from_elastic(name, page_size, page_number)
 
+    @cache_decorator(get_cache())
     async def _get_person_from_elastic(self, person_id: UUID) -> Person | None:
         try:
             doc = await self.elastic.get(index='persons', id=person_id)
@@ -46,6 +37,7 @@ class PersonService:
 
         return PersonShort(**doc.body['_source'])
 
+    @cache_decorator(get_cache())
     async def _get_persons_from_elastic(
         self, name: str, page_size: int | None = None, page_number: int | None = None
     ) -> list[PersonShort]:
@@ -66,16 +58,7 @@ class PersonService:
 
         return list(PersonShort(**hit["_source"]) for hit in doc["hits"]["hits"])
 
-    async def _person_from_cache(self, person_id: str) -> Person | None:
-        ...
-
-    async def _put_person_to_cache(self, person: Person) -> None:
-        ...
-
 
 @lru_cache
-def get_persons_service(
-    redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> PersonService:
-    return PersonService(redis, elastic)
+def get_persons_service() -> PersonService:
+    return PersonService(get_elastic_manager())

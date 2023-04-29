@@ -1,51 +1,43 @@
 from functools import lru_cache
-from typing import Optional
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
+from elasticsearch import NotFoundError
 
-from db.elastic import get_elastic
-from db.redis import get_redis
+from db.elastic import ElasticManager
+from db.elastic import get_manager as get_elastic_manager
+from db.redis import get_cache
 from models.models import Genre, GenreShort
+
+from .cache import cache_decorator
 
 GENRE_CACHE_EXPIRE_IN_SECONDS = 24 * 60 * 60  # 24 hours
 
 
 class GenreService:
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
-        self.elastic = elastic
+    def __init__(self, elastic: ElasticManager):
+        self.elastic: ElasticManager = elastic
 
     async def get_by_id(self, genre_id: UUID) -> Genre | None:
         """Данные по конкретному жанру."""
-        genre = await self._get_genre_from_cache(genre_id)
+        genre = await self._get_genre_from_elastic(genre_id)
 
         if not genre:
-            genre = await self._get_genre_from_elastic(genre_id)
+            return None
 
-            if not genre:
-                return None
+        popularity = await self._get_popularity_from_elastic(genre_id)
 
-            await self._put_genre_to_cache(genre)
-
-        return genre
+        return Genre(**dict(genre), popularity=popularity)
 
     async def get_genres(self) -> list[Genre] | None:
         """Получить список жанров"""
-        genres = await self._get_genres_from_cache()
+        genres = await self._get_genres_from_elastic()
 
         if not genres:
-            genres = await self._get_genres_from_elastic()
-
-            if not genres:
-                return None
-
-            await self._put_genres_to_cache(genres)
+            return None
 
         return genres
 
+    @cache_decorator(get_cache())
     async def _get_genre_from_elastic(self, genre_id: UUID) -> GenreShort | None:
         try:
             doc = await self.elastic.get(index='genres', id=genre_id)
@@ -53,14 +45,9 @@ class GenreService:
         except NotFoundError:
             return None
 
-        try:
-            popularity = await self._get_popularity_from_elastic(genre_id)
+        return GenreShort(**doc.body['_source'])
 
-        except NotFoundError:
-            return None
-
-        return Genre(**doc.body['_source'], popularity=popularity)
-
+    @cache_decorator(get_cache())
     async def _get_popularity_from_elastic(self, genre_id: UUID) -> float | None:
         query = {
             "bool": {
@@ -85,6 +72,7 @@ class GenreService:
 
         return results["aggregations"]["avg_imdb_rating"]["value"]
 
+    @cache_decorator(get_cache())
     async def _get_genres_from_elastic(self) -> list[Genre] | None:
         query = {"match_all": {}}
         source = ["id", "name"]
@@ -97,22 +85,7 @@ class GenreService:
 
         return list(GenreShort(**hit["_source"]) for hit in doc.body['hits']['hits'])
 
-    async def _get_genre_from_cache(self, genre_id: str) -> Optional[Genre]:
-        ...
-
-    async def _get_genres_from_cache(self) -> Optional[list[Genre]]:
-        ...
-
-    async def _put_genre_to_cache(self, genre: Genre) -> None:
-        ...
-
-    async def _put_genres_to_cache(self, genres: list[GenreShort]) -> None:
-        ...
-
 
 @lru_cache
-def get_genres_service(
-    redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> GenreService:
-    return GenreService(redis, elastic)
+def get_genres_service() -> GenreService:
+    return GenreService(get_elastic_manager())

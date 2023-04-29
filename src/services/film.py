@@ -15,7 +15,7 @@ from .cache import cache_decorator
 class FilmService:
     def __init__(self, elastic: ElasticManager):
         self.elastic = elastic
-        self.person_fields = {
+        self._person_roles = {
             "actors_inner_hits": "actor",
             "directors_inner_hits": "director",
             "writers_inner_hits": "writer",
@@ -156,11 +156,22 @@ class FilmService:
     ) -> list[FilmRoles]:
         """Получить фильмы персоны с его ролью"""
 
+        return self._get_films_with_roles_by_person_from_elastic(
+            person_id, page_size, page_number
+        )
+
+    @cache_decorator(get_cache())
+    async def _get_films_with_roles_by_person_from_elastic(
+        self,
+        person_id: UUID,
+        page_size: int | None = None,
+        page_number: int | None = None,
+    ) -> list[FilmRoles]:
         def parse_roles(inner_hits: dict) -> list[str]:
             return list(
-                self.person_fields[name]
+                self._person_roles[name]
                 for name, hit in inner_hits.items()
-                if bool(hit["hits"]["total"]["value"]) and name in self.person_fields
+                if bool(hit["hits"]["total"]["value"]) and name in self.person_roles
             )
 
         try:
@@ -196,7 +207,7 @@ class FilmService:
             }
             source = ["id", "imdb_rating", "title"]
 
-            doc = await self.elastic.search(
+            docs = await self.elastic.search(
                 index="movies",
                 query=query,
                 source=source,
@@ -205,11 +216,11 @@ class FilmService:
             )
 
         except NotFoundError:
-            return None
+            return []
 
         return list(
             FilmRoles(**hit["_source"], roles=parse_roles(hit["inner_hits"]))
-            for hit in doc["hits"]["hits"]
+            for hit in docs["hits"]["hits"]
         )
 
     async def get_films_by_person(
@@ -219,6 +230,15 @@ class FilmService:
         page_number: int | None = None,
     ) -> list[FilmShort]:
         """Получить список фильмов в кратком представлении по персоне"""
+        return self._get_films_by_person_from_elastic(person_id, page_size, page_number)
+
+    @cache_decorator(get_cache())
+    async def _get_films_by_person_from_elastic(
+        self,
+        person_id: UUID,
+        page_size: int | None = None,
+        page_number: int | None = None,
+    ) -> list[FilmShort]:
         try:
             query = {
                 "bool": {

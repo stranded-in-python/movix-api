@@ -16,9 +16,9 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup():
-    redis_manager = await redis.get_manager()
+    redis_manager = redis.get_manager()
     await redis_manager.on_startup()
-    elastic_manager = await elastic.get_manager()
+    elastic_manager = elastic.get_manager()
     await elastic_manager.on_startup()
 
 
