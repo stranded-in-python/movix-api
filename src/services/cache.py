@@ -1,9 +1,11 @@
+import codecs
+import json
+import pickle
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Callable
+from typing import Any, Callable
 
 from core.config import settings
-from core.utils import orjson_dumps
 from db.redis import Cache
 
 
@@ -15,13 +17,29 @@ def expired(timestamp: datetime) -> bool:
     return False
 
 
+def is_serializable(thing: Any) -> bool:
+    try:
+        json.dumps(thing)
+    except TypeError:
+        return False
+    return True
+
+
 def prepare_key(func: Callable, *args, **kwargs) -> str:
-    key = {
-        'callable': func.__name__,
-        'args': [str(arg) for arg in args],
-        'kwargs': sorted(kwargs.items()),
-    }
-    return orjson_dumps(key)
+    key = {'callable': func.__name__, 'args': args, 'kwargs': sorted(kwargs.items())}
+    serialized = ""
+    try:
+        serialized = json.dumps(key)
+    except TypeError:
+        # if can't encode straight to json, we need to encode to base64 first
+        if not is_serializable(key['args']):
+            key['args'] = codecs.encode(pickle.dumps(key['args']), 'base64').decode()
+        if not is_serializable(key['kwargs']):
+            key['kwargs'] = codecs.encode(
+                pickle.dumps(key['kwargs']), 'base64'
+            ).decode()
+    serialized = json.dumps(key)
+    return serialized
 
 
 def cache_decorator(cache_storage: Cache) -> Callable:
