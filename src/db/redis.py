@@ -41,7 +41,7 @@ def get_manager() -> RedisManager:
     Метод для получения инстанса менеджера
     """
 
-    manager: Manager | None = cast(RedisManager, RedisManager.get())
+    manager: RedisManager | None = cast(RedisManager, RedisManager.get_instance())
     if manager is None:
         manager = RedisManager(
             RedisClient(host=settings.redis_host, port=settings.redis_port)
