@@ -40,7 +40,7 @@ class GenreService:
     @cache_decorator(get_cache())
     async def _get_genre_from_elastic(self, genre_id: UUID) -> GenreShort | None:
         try:
-            doc = await self.elastic.get(index='genres', id=genre_id)
+            doc = await self.elastic._client.get(index='genres', id=genre_id)
 
         except NotFoundError:
             return None
@@ -65,7 +65,9 @@ class GenreService:
         aggs = {"avg_imdb_rating": {"avg": {"field": "imdb_rating"}}}
 
         try:
-            results = await self.elastic.search(index="movies", query=query, aggs=aggs)
+            results = await self.elastic._client.search(
+                index="movies", query=query, aggs=aggs
+            )
 
         except NotFoundError:
             return None
@@ -78,7 +80,9 @@ class GenreService:
         source = ["id", "name"]
 
         try:
-            doc = await self.elastic.search(index="genres", query=query, source=source)
+            doc = await self.elastic._client.search(
+                index="genres", query=query, source=source
+            )
 
         except NotFoundError:
             return None

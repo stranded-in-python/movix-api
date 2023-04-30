@@ -16,7 +16,11 @@ def expired(timestamp: datetime) -> bool:
 
 
 def prepare_key(func: Callable, *args, **kwargs) -> str:
-    key = {'callable': func.__name__, 'args': args, 'kwargs': sorted(kwargs.items())}
+    key = {
+        'callable': func.__name__,
+        'args': repr(*args),
+        'kwargs': sorted(kwargs.items()),
+    }
     return dumps(key)
 
 

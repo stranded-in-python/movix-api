@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     cache_expiration_in_seconds: int = 300
 
     # Настройки Elasticsearch
-    elastic_endpoint: str = 'http://elastic:9200'
+    elastic_endpoint: str = 'http://127.0.0.1:9200'
 
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))
