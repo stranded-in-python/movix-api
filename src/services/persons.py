@@ -3,7 +3,7 @@ from uuid import UUID
 
 from elasticsearch import NotFoundError
 
-from db.elastic import ElasticManager
+from db.elastic import ElasticClient, ElasticManager
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import Person, PersonShort
@@ -14,8 +14,8 @@ PERSON_CACHE_EXPIRE_IN_SECONDS = 24 * 60 * 60  # 24 hours
 
 
 class PersonService:
-    def __init__(self, elastic: ElasticManager):
-        self.elastic: ElasticManager = elastic
+    def __init__(self, elastic_manager: ElasticManager):
+        self.elastic: ElasticClient = elastic_manager.get_client()
 
     async def get_by_id(self, person_id: UUID) -> PersonShort | None:
         """Данные по персоне."""

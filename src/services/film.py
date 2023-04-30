@@ -4,7 +4,7 @@ from uuid import UUID
 
 from elasticsearch import NotFoundError
 
-from db.elastic import ElasticManager
+from db.elastic import ElasticClient, ElasticManager
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import Film, FilmRoles, FilmShort
@@ -13,8 +13,8 @@ from .cache import cache_decorator
 
 
 class FilmService:
-    def __init__(self, elastic: ElasticManager):
-        self.elastic = elastic
+    def __init__(self, elastic_manager: ElasticManager):
+        self.elastic: ElasticClient = elastic_manager.get_client()
         self._person_roles = {
             "actors_inner_hits": "actor",
             "directors_inner_hits": "director",
@@ -156,7 +156,7 @@ class FilmService:
     ) -> list[FilmRoles]:
         """Получить фильмы персоны с его ролью"""
 
-        return self._get_films_with_roles_by_person_from_elastic(
+        return await self._get_films_with_roles_by_person_from_elastic(
             person_id, page_size, page_number
         )
 
@@ -171,7 +171,7 @@ class FilmService:
             return list(
                 self._person_roles[name]
                 for name, hit in inner_hits.items()
-                if bool(hit["hits"]["total"]["value"]) and name in self.person_roles
+                if bool(hit["hits"]["total"]["value"]) and name in self._person_roles
             )
 
         try:
@@ -230,7 +230,9 @@ class FilmService:
         page_number: int | None = None,
     ) -> list[FilmShort]:
         """Получить список фильмов в кратком представлении по персоне"""
-        return self._get_films_by_person_from_elastic(person_id, page_size, page_number)
+        return await self._get_films_by_person_from_elastic(
+            person_id, page_size, page_number
+        )
 
     @cache_decorator(get_cache())
     async def _get_films_by_person_from_elastic(
@@ -281,5 +283,5 @@ class FilmService:
 
 
 @lru_cache
-async def get_film_service() -> FilmService:
+def get_film_service() -> FilmService:
     return FilmService(get_elastic_manager())

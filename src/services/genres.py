@@ -3,7 +3,7 @@ from uuid import UUID
 
 from elasticsearch import NotFoundError
 
-from db.elastic import ElasticManager
+from db.elastic import ElasticClient, ElasticManager
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import Genre, GenreShort
@@ -14,8 +14,8 @@ GENRE_CACHE_EXPIRE_IN_SECONDS = 24 * 60 * 60  # 24 hours
 
 
 class GenreService:
-    def __init__(self, elastic: ElasticManager):
-        self.elastic: ElasticManager = elastic
+    def __init__(self, elastic_manager: ElasticManager):
+        self.elastic: ElasticClient = elastic_manager.get_client()
 
     async def get_by_id(self, genre_id: UUID) -> Genre | None:
         """Данные по конкретному жанру."""
@@ -40,7 +40,7 @@ class GenreService:
     @cache_decorator(get_cache())
     async def _get_genre_from_elastic(self, genre_id: UUID) -> GenreShort | None:
         try:
-            doc = await self.elastic._client.get(index='genres', id=genre_id)
+            doc = await self.elastic.get(index='genres', id=genre_id)
 
         except NotFoundError:
             return None
@@ -65,9 +65,7 @@ class GenreService:
         aggs = {"avg_imdb_rating": {"avg": {"field": "imdb_rating"}}}
 
         try:
-            results = await self.elastic._client.search(
-                index="movies", query=query, aggs=aggs
-            )
+            results = await self.elastic.search(index="movies", query=query, aggs=aggs)
 
         except NotFoundError:
             return None
@@ -80,9 +78,7 @@ class GenreService:
         source = ["id", "name"]
 
         try:
-            doc = await self.elastic._client.search(
-                index="genres", query=query, source=source
-            )
+            doc = await self.elastic.search(index="genres", query=query, source=source)
 
         except NotFoundError:
             return None
