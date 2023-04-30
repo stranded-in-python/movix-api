@@ -22,11 +22,12 @@ class Genre(GenreShort):
 
 
 class Film(FilmShort):
-    description: str
+    description: str | None = None
     genres: list[GenreShort]
     actors: list[PersonShort]
     writers: list[PersonShort]
     directors: list[PersonShort]
+    creation_date: datetime | None = None
 
 
 class FilmRoles(FilmShort, JSONConfigMixin):

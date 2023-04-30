@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import List
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -10,22 +11,13 @@ router = APIRouter()
 
 
 class Film(BaseModel):
-    uuid: str
+    uuid: UUID
     title: str
     imdb_rating: float
 
 
 class FilmDetailed(Film):
-    description: str
-    genre: list
-    actors: list
-    writers: list
-    directors: list
-    imdb_rating: float
-
-
-class FilmDetailed(Film):
-    description: str
+    description: str | None = None
     genre: list
     actors: list
     writers: list
@@ -40,7 +32,7 @@ async def film_details(
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
     return FilmDetailed(
-        uuid=film.uuid,
+        uuid=film.id,
         title=film.title,
         imdb_rating=film.imdb_rating,
         description=film.description,
@@ -49,6 +41,7 @@ async def film_details(
         writers=film.writers,
         directors=film.directors,
     )
+
 
 @router.get("/", response_model=list[Film], description="Get Films List")
 async def film_list(
@@ -65,7 +58,10 @@ async def film_list(
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
 
-    films_to_return = [Film(uuid=film.uuid, title=film.title, imdb_rating=film.imdb_rating) for film in films]
+    films_to_return = [
+        Film(uuid=film.id, title=film.title, imdb_rating=film.imdb_rating)
+        for film in films
+    ]
     return films_to_return
 
 
@@ -79,5 +75,8 @@ async def film_list_query(
     films = await film_service.get_by_query(query, page_number, page_size)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
-    films_to_return = [Film(uuid=film.uuid, title=film.title, imdb_rating=film.imdb_rating) for film in films]
+    films_to_return = [
+        Film(uuid=film.id, title=film.title, imdb_rating=film.imdb_rating)
+        for film in films
+    ]
     return films_to_return
