@@ -9,6 +9,10 @@ from core.logger import LOGGING
 logging_config.dictConfig(LOGGING)
 
 
+class ModelConfig:
+    allow_population_by_field_name = True
+
+
 class Settings(BaseSettings):
     # Название проекта. Используется в Swagger-документации
     project_name: str = 'movies'
