@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from functools import wraps
-from json import dumps
 from typing import Callable
 
 from core.config import settings
+from core.utils import orjson_dumps
 from db.redis import Cache
 
 
@@ -21,7 +21,7 @@ def prepare_key(func: Callable, *args, **kwargs) -> str:
         'args': repr(*args),
         'kwargs': sorted(kwargs.items()),
     }
-    return dumps(key)
+    return orjson_dumps(key)
 
 
 def cache_decorator(cache_storage: Cache) -> Callable:
