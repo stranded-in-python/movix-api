@@ -1,0 +1,14 @@
+version: "3.8"
+
+name: "movix_tests"
+
+services:
+  api:
+    image: ghcr.io/stranded-in-python/movix-api:dev
+    stdin_open: true
+    command: "pytest /app"
+    volumes:
+      - ./src:/app:z
+    entrypoint: ""
+    ports:
+      - "8001:8000"
