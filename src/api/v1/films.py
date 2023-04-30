@@ -21,6 +21,15 @@ class FilmDetailed(Film):
     actors: list
     writers: list
     directors: list
+    imdb_rating: float
+
+
+class FilmDetailed(Film):
+    description: str
+    genre: list
+    actors: list
+    writers: list
+    directors: list
 
 
 @router.get("/{film_id}", response_model=FilmDetailed, description="Search Film by ID")
