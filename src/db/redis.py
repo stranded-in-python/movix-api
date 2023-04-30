@@ -60,11 +60,10 @@ class CacheError(Exception):
 class Cache(metaclass=Singleton):
     """
     Класс-обёртка над redis для работы с cache методов.
-
     """
 
-    def __init__(self, redis):
-        self.redis: Redis = redis
+    def __init__(self, storage: Redis):
+        self.redis: Redis = storage
 
     async def get(self, key: str) -> Any:
         """
@@ -97,5 +96,5 @@ def get_cache() -> Cache:
     Получить инстанс Cache
     """
     redis_manager = get_manager()
-    redis = redis_manager.get_client()
-    return Cache(redis)
+    storage = redis_manager.get_client()
+    return Cache(storage)

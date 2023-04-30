@@ -32,7 +32,7 @@ async def test_redis_client_ping(redis_client):
 
 @pytest.mark.asyncio
 async def test_get_manager_returns_instance(redis_manager):
-    with patch.object(RedisManager, "get") as mocked_get:
+    with patch.object(RedisManager, "get_instance") as mocked_get:
         mocked_get.return_value = redis_manager
         manager = get_manager()
         assert manager == redis_manager
@@ -41,7 +41,7 @@ async def test_get_manager_returns_instance(redis_manager):
 @pytest.mark.asyncio
 async def test_get_manager_creates_new_instance(redis_manager, redis_client):
     with (
-        patch.object(RedisManager, "get") as mocked_manager_get,
+        patch.object(RedisManager, "get_instance") as mocked_manager_get,
         patch.object(RedisManager, "__new__") as mocked_manager_new,
         patch.object(RedisClient, "__new__") as mocked_client_new,
     ):

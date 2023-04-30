@@ -1,4 +1,4 @@
-from typing import Any, Mapping, cast
+from typing import cast
 
 from elasticsearch import AsyncElasticsearch
 
@@ -30,19 +30,11 @@ class ElasticManager(Manager):
     async def on_startup(self):
         await self._client.ping()
 
-    async def get(self, index: str, id: str):
-        return await self._client.get(index=index, id=id)
+    async def get(self, *args, **kwargs):
+        return await self.get_client().get(*args, **kwargs)
 
-    async def search(
-        self,
-        index: str,
-        query: dict[str, Any],
-        source: bool | Mapping[str, Any] | None = None,
-        aggs: dict[str, Any] | None = None,
-    ):
-        return await self._client.search(
-            index=index, query=query, aggs=aggs, source=source
-        )
+    async def search(self, *args, **kwargs):
+        return await self.get_client().search(*args, **kwargs)
 
 
 def get_manager() -> ElasticManager:

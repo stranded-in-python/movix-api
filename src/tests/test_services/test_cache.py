@@ -20,7 +20,7 @@ def test_prepare_key():
         == '{"callable": "<lambda>", "args": [1], "kwargs": [["b", 2]]}'
     )
     assert (
-        prepare_key(str.upper, 'hello')
+        prepare_key(str.upper, "hello")
         == '{"callable": "upper", "args": ["hello"], "kwargs": []}'
     )
 

@@ -1,7 +1,7 @@
 from uuid import UUID
 
 import orjson
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 
 from core.utils import orjson_dumps
 
@@ -12,5 +12,14 @@ class JSONConfigMixin:
         json_dumps = orjson_dumps
 
 
-class UUIDMixin(BaseModel):
-    uuid: UUID
+class UUIDMixin(JSONConfigMixin, BaseModel):
+    id: UUID | str = Field(alias='uuid')
+
+    @validator('id')
+    def string_to_float(cls, v):
+        if v is str:
+            return UUID(v)
+        return v
+
+    class Config:
+        allow_population_by_field_name = True
