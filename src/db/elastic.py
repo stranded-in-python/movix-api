@@ -31,10 +31,10 @@ class ElasticManager(Manager):
         await self._client.ping()
 
     async def get(self, *args, **kwargs):
-        return self.get_client().get(*args, **kwargs)
+        return await self.get_client().get(*args, **kwargs)
 
     async def search(self, *args, **kwargs):
-        return self.get_client().search(*args, **kwargs)
+        return await self.get_client().search(*args, **kwargs)
 
 
 def get_manager() -> ElasticManager:
@@ -42,7 +42,7 @@ def get_manager() -> ElasticManager:
     Получить instance менеджера
     """
 
-    manager: Manager | None = cast(ElasticManager, ElasticManager.get())
+    manager: ElasticManager | None = cast(ElasticManager, ElasticManager.get_instance())
     if manager is None:
         manager = ElasticManager(ElasticClient(hosts=[settings.elastic_endpoint]))
     return manager

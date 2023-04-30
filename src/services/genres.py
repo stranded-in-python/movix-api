@@ -76,7 +76,7 @@ class GenreService:
         source = ["id", "name"]
 
         try:
-            doc = await get_elastic_manager.search(
+            doc = await get_elastic_manager().search(
                 index="genres", query=query, source=source
             )
 
@@ -88,4 +88,4 @@ class GenreService:
 
 @lru_cache
 def get_genres_service() -> GenreService:
-    return GenreService(get_elastic_manager())
+    return GenreService()

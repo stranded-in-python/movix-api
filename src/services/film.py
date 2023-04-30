@@ -4,7 +4,6 @@ from uuid import UUID
 
 from elasticsearch import NotFoundError
 
-from db.elastic import ElasticClient, ElasticManager
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import Film, FilmRoles, FilmShort
@@ -13,8 +12,7 @@ from .cache import cache_decorator
 
 
 class FilmService:
-    def __init__(self, elastic_manager: ElasticManager):
-        self.elastic: ElasticClient = elastic_manager.get_client()
+    def __init__(self):
         self._person_roles = {
             "actors_inner_hits": "actor",
             "directors_inner_hits": "director",
@@ -27,9 +25,8 @@ class FilmService:
 
     @cache_decorator(get_cache())
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
-        elastic = self.elastic.get_client()
         try:
-            doc = await elastic.get('movies', film_id)
+            doc = await get_elastic_manager().get('movies', film_id)
         except NotFoundError:
             return None
         return Film(**doc['_source'])
@@ -73,7 +70,7 @@ class FilmService:
             "_source": ["id", "imdb_rating", "title"],
         }
         try:
-            doc = await self.elastic.search(
+            doc = await get_elastic_manager().search(
                 index="movies", body=body, sort=f"{sort}:desc"
             )
         except NotFoundError:
@@ -100,7 +97,7 @@ class FilmService:
             "_source": ["id", "imdb_rating", "title"],
         }
         try:
-            doc = await self.elastic.search(
+            doc = await get_elastic_manager().search(
                 index="movies", body=body, sort=f"{sort}:desc"
             )
         except NotFoundError:
@@ -117,7 +114,7 @@ class FilmService:
             "_source": ["id", "imdb_rating", "title"],
         }
         try:
-            doc = await self.elastic.search(
+            doc = await get_elastic_manager().search(
                 index="movies", body=body, sort=f"{sort}:desc"
             )
         except NotFoundError:
@@ -143,7 +140,7 @@ class FilmService:
                 "query": query,
                 "_source": ["id", "imdb_rating", "title"],
             }
-            doc = await self.elastic.search(index="movies", body=body)
+            doc = await get_elastic_manager().search(index="movies", body=body)
         except NotFoundError:
             return None
         return [FilmShort(**hit["fields"]) for hit in doc["hits"]["hits"]]
@@ -207,7 +204,7 @@ class FilmService:
             }
             source = ["id", "imdb_rating", "title"]
 
-            docs = await self.elastic.search(
+            docs = await get_elastic_manager().search(
                 index="movies",
                 query=query,
                 source=source,
@@ -268,7 +265,7 @@ class FilmService:
             }
             source = ["id", "imdb_rating", "title"]
 
-            doc = await self.elastic.search(
+            doc = await get_elastic_manager().search(
                 index="movies",
                 query=query,
                 source=source,
@@ -284,4 +281,4 @@ class FilmService:
 
 @lru_cache
 def get_film_service() -> FilmService:
-    return FilmService(get_elastic_manager())
+    return FilmService()

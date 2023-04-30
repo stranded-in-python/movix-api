@@ -25,9 +25,9 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     # Отключаемся от баз при выключении сервера
-    redis_manager = await redis.get_manager()
+    redis_manager = redis.get_manager()
     await redis_manager.on_shutdown()
-    elastic_manager = await elastic.get_manager()
+    elastic_manager = elastic.get_manager()
     await elastic_manager.on_shutdown()  # type: ignore
 
 
