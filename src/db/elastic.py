@@ -30,6 +30,12 @@ class ElasticManager(Manager):
     async def on_startup(self):
         await self._client.ping()
 
+    async def get(self, *args, **kwargs):
+        return self.get_client().get(*args, **kwargs)
+
+    async def search(self, *args, **kwargs):
+        return self.get_client().search(*args, **kwargs)
+
 
 def get_manager() -> ElasticManager:
     """
