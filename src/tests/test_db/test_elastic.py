@@ -28,7 +28,7 @@ async def test_elastic_client_ping(elastic_client):
 
 @pytest.mark.asyncio
 async def test_get_manager_returns_instance(elastic_manager):
-    with patch.object(ElasticManager, "get") as mocked_get:
+    with patch.object(ElasticManager, "get_instance") as mocked_get:
         mocked_get.return_value = elastic_manager
         manager = get_manager()
         assert manager == elastic_manager
@@ -41,7 +41,7 @@ def fake_init(self, *args, **kwargs):
 @pytest.mark.asyncio
 async def test_get_manager_creates_new_instance(elastic_manager, elastic_client):
     with (
-        patch.object(ElasticManager, "get") as mocked_manager_get,
+        patch.object(ElasticManager, "get_instance") as mocked_manager_get,
         patch.object(ElasticManager, "__new__") as mocked_manager_new,
         patch.object(ElasticClient, "__new__") as mocked_client_new,
     ):
