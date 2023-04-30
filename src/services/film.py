@@ -1,11 +1,7 @@
-import logging
 from functools import lru_cache
 from typing import Optional
-from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, BadRequestError, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
+from elasticsearch import NotFoundError
 
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
