@@ -13,15 +13,15 @@ def test_prepare_key():
     # Проверяем, что ключи функции правильно сериализуются в строку
     assert (
         prepare_key(sum, [1, 2, 3], start=10)
-        == '{"callable": "sum", "args": [[1, 2, 3]], "kwargs": [["start", 10]]}'
+        == '{"callable":"sum","args":["[1, 2, 3]"],"kwargs":[["start",10]]}'
     )
     assert (
         prepare_key(lambda x: x, 1, b=2)
-        == '{"callable": "<lambda>", "args": [1], "kwargs": [["b", 2]]}'
+        == '{"callable":"<lambda>","args":["1"],"kwargs":[["b",2]]}'
     )
     assert (
-        prepare_key(str.upper, 'hello')
-        == '{"callable": "upper", "args": ["hello"], "kwargs": []}'
+        prepare_key(str.upper, "hello")
+        == '{"callable":"upper","args":["hello"],"kwargs":[]}'
     )
 
 

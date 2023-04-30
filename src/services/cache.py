@@ -18,7 +18,7 @@ def expired(timestamp: datetime) -> bool:
 def prepare_key(func: Callable, *args, **kwargs) -> str:
     key = {
         'callable': func.__name__,
-        'args': [repr(arg) for arg in args],
+        'args': [str(arg) for arg in args],
         'kwargs': sorted(kwargs.items()),
     }
     return orjson_dumps(key)
