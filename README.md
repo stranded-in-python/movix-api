@@ -10,6 +10,6 @@ FastAPI, Elasticsearch-py, Redis
 
 ## How to install
 
-For installation instructions go to [Movix](https://github.com/stranded-in-python/movix-api)
+For installation instructions go to [Movix](https://github.com/stranded-in-python/movix)
 
 ## Disclaimer
