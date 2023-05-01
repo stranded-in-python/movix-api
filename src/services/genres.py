@@ -9,8 +9,6 @@ from models.models import Genre, GenreShort
 
 from .cache import cache_decorator
 
-GENRE_CACHE_EXPIRE_IN_SECONDS = 24 * 60 * 60  # 24 hours
-
 
 class GenreService:
     async def get_by_id(self, genre_id: UUID) -> Genre | None:
@@ -24,14 +22,9 @@ class GenreService:
 
         return Genre(**dict(genre), popularity=popularity)
 
-    async def get_genres(self) -> list[Genre] | None:
+    async def get_genres(self) -> list[GenreShort] | None:
         """Получить список жанров"""
-        genres = await self._get_genres_from_elastic()
-
-        if not genres:
-            return None
-
-        return genres
+        return await self._get_genres_from_elastic()
 
     @cache_decorator(get_cache())
     async def _get_genre_from_elastic(self, genre_id: UUID) -> GenreShort | None:
@@ -71,7 +64,7 @@ class GenreService:
         return results["aggregations"]["avg_imdb_rating"]["value"]
 
     @cache_decorator(get_cache())
-    async def _get_genres_from_elastic(self) -> list[Genre] | None:
+    async def _get_genres_from_elastic(self) -> list[GenreShort | Genre] | None:
         query = {"match_all": {}}
         source = ["id", "name"]
 

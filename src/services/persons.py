@@ -5,11 +5,9 @@ from elasticsearch import NotFoundError
 
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
-from models.models import Person, PersonShort
+from models.models import PersonShort
 
 from .cache import cache_decorator
-
-PERSON_CACHE_EXPIRE_IN_SECONDS = 24 * 60 * 60  # 24 hours
 
 
 class PersonService:
@@ -24,7 +22,7 @@ class PersonService:
         return await self._get_persons_from_elastic(name, page_size, page_number)
 
     @cache_decorator(get_cache())
-    async def _get_person_from_elastic(self, person_id: UUID) -> Person | None:
+    async def _get_person_from_elastic(self, person_id: UUID) -> PersonShort | None:
         try:
             doc = await get_elastic_manager().get(index='persons', id=person_id)
 
@@ -50,7 +48,7 @@ class PersonService:
             )
 
         except NotFoundError:
-            return None
+            return []
 
         return list(PersonShort(**hit["_source"]) for hit in doc["hits"]["hits"])
 
