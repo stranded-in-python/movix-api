@@ -44,11 +44,11 @@ async def film_details(
 
 @router.get("/", response_model=list[Film], description="Get Films List")
 async def film_list(
-    sort: str,
-    page_size: int,
-    page_number: int,
-    genre_id=None,  # должен быть id
-    similar_to=None,
+    sort: str | None = None,
+    genre_id: str | None = None,
+    similar_to: str | None = None,
+    page_size: int = 50,
+    page_number: int = 1,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_films(
@@ -66,9 +66,9 @@ async def film_list(
 
 @router.get("/search/", response_model=list[Film], description="Search Films by Title")
 async def film_list_query(
-    query: str,
-    page_number: int,
-    page_size: int,
+    query: str = "",
+    page_number: int = 1,
+    page_size: int = 50,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_by_query(query, page_number, page_size)
