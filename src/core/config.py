@@ -3,10 +3,7 @@ from logging import config as logging_config
 
 from pydantic import BaseSettings
 
-from core.logger import LOGGING
-
-# Применяем настройки логирования
-logging_config.dictConfig(LOGGING)
+from core.logger import LOG_LEVEL, get_logging_config
 
 
 class ModelConfig:
@@ -28,5 +25,11 @@ class Settings(BaseSettings):
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))
 
+    log_level: str = LOG_LEVEL
+
 
 settings = Settings()
+
+
+# Применяем настройки логирования
+logging_config.dictConfig(get_logging_config(level=settings.log_level))
