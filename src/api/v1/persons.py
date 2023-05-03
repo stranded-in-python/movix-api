@@ -10,7 +10,14 @@ from services.persons import PersonService, get_persons_service
 router = APIRouter()
 
 
-@router.get("/search", response_model=list[Person])
+@router.get(
+    "/search",
+    response_model=list[Person],
+    summary="Поиск по персонам",
+    description="Полнотекстовый поиск по персонам кинопроизведений",
+    response_description="Идентификатор, имя и данные об участиях в фильмах персоны",
+    tags=['Полнотекстовый поиск'],
+)
 async def person_list(
     query: str,
     page_size: int | None = None,
@@ -34,7 +41,14 @@ async def person_list(
     ]
 
 
-@router.get("/{person_id}", response_model=Person)
+@router.get(
+    "/{person_id}",
+    response_model=Person,
+    summary="Получить описание персоны",
+    description="Подробное описание киноперсоны",
+    response_description="Идентификатор, имя, подробное описание об участих персоны",
+    tags=['Детали'],
+)
 async def person_details(
     person_id: UUID,
     page_size: int | None = None,
@@ -57,7 +71,14 @@ async def person_details(
     return Person(**dict(person), films=films)
 
 
-@router.get("/{person_id}/film", response_model=list[FilmShort])
+@router.get(
+    "/{person_id}/film",
+    response_model=list[FilmShort],
+    summary="Получить список фильмов персоны",
+    description="Список кинопроизведений в которых участвовала указанная персона",
+    response_description="Список кратких представлений кинопроизведений",
+    tags=['Списки'],
+)
 async def person_films(
     person_id: UUID,
     page_size: int | None = None,

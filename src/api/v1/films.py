@@ -23,7 +23,14 @@ class FilmDetailed(Film):
     directors: list
 
 
-@router.get("/{film_id}", response_model=FilmDetailed, description="Search Film by ID")
+@router.get(
+    "/{film_id}",
+    response_model=FilmDetailed,
+    summary="Получить описание кинопроизведения",
+    description="Подробное описание кинопроизведения",
+    response_description="Идентификатор, наименование, рейтинг, описание, список жанров, краткое представления об участниках кинопроизведения",
+    tags=['Детали'],
+)
 async def film_details(
     film_id: str, film_service: FilmService = Depends(get_film_service)
 ) -> FilmDetailed:
@@ -42,7 +49,14 @@ async def film_details(
     )
 
 
-@router.get("/", response_model=list[Film], description="Get Films List")
+@router.get(
+    "/",
+    response_model=list[Film],
+    summary="Получить список фильмов",
+    description="Список кинопроизведений с параметрами отбора, упорядочивания, пагинации",
+    response_description="Список кратких представлений кинопроизведений",
+    tags=['Списки'],
+)
 async def film_list(
     sort: str | None = None,
     genre_id: str | None = None,
@@ -64,7 +78,14 @@ async def film_list(
     return films_to_return
 
 
-@router.get("/search/", response_model=list[Film], description="Search Films by Title")
+@router.get(
+    "/search/",
+    response_model=list[Film],
+    summary="Поиск по кинопроизведений",
+    description="Полнотекстовый поиск по кинопроизведениям",
+    response_description="Идентификатор, название и рейтинг кинопроизведения",
+    tags=['Полнотекстовый поиск'],
+)
 async def film_list_query(
     query: str = "",
     page_number: int = 1,
