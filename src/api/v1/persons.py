@@ -1,7 +1,8 @@
 from http import HTTPStatus
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.models import FilmShort, Person
 from services.film import FilmService, get_film_service
@@ -10,11 +11,18 @@ from services.persons import PersonService, get_persons_service
 router = APIRouter()
 
 
-@router.get("/search", response_model=list[Person])
+@router.get(
+    "/search",
+    response_model=list[Person],
+    summary="Поиск по персонам",
+    description="Полнотекстовый поиск по персонам кинопроизведений",
+    response_description="Идентификатор, имя и данные об участиях в фильмах персоны",
+    tags=['Полнотекстовый поиск'],
+)
 async def person_list(
     query: str,
-    page_size: int | None = None,
-    page_number: int | None = None,
+    page_size: Annotated[int, Query(gt=0)] = None,
+    page_number: Annotated[int, Query(gt=0)] = None,
     persons_service: PersonService = Depends(get_persons_service),
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Person]:
@@ -34,11 +42,18 @@ async def person_list(
     ]
 
 
-@router.get("/{person_id}", response_model=Person)
+@router.get(
+    "/{person_id}",
+    response_model=Person,
+    summary="Получить описание персоны",
+    description="Подробное описание киноперсоны",
+    response_description="Идентификатор, имя, подробное описание об участих персоны",
+    tags=['Детали'],
+)
 async def person_details(
     person_id: UUID,
-    page_size: int | None = None,
-    page_number: int | None = None,
+    page_size: Annotated[int, Query(gt=0)] | None = None,
+    page_number: Annotated[int, Query(gt=0)] | None = None,
     persons_service: PersonService = Depends(get_persons_service),
     film_service: FilmService = Depends(get_film_service),
 ) -> Person:
@@ -57,11 +72,18 @@ async def person_details(
     return Person(**dict(person), films=films)
 
 
-@router.get("/{person_id}/film", response_model=list[FilmShort])
+@router.get(
+    "/{person_id}/film",
+    response_model=list[FilmShort],
+    summary="Получить список фильмов персоны",
+    description="Список кинопроизведений в которых участвовала указанная персона",
+    response_description="Список кратких представлений кинопроизведений",
+    tags=['Списки'],
+)
 async def person_films(
     person_id: UUID,
-    page_size: int | None = None,
-    page_number: int | None = None,
+    page_size: Annotated[int, Query(gt=0)] | None = None,
+    page_number: Annotated[int, Query(gt=0)] | None = None,
     persons_service: PersonService = Depends(get_persons_service),
     film_service: FilmService = Depends(get_film_service),
 ) -> list[FilmShort]:

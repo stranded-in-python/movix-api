@@ -1,7 +1,8 @@
 from http import HTTPStatus
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from services.film import FilmService, get_film_service
@@ -23,7 +24,14 @@ class FilmDetailed(Film):
     directors: list
 
 
-@router.get("/{film_id}", response_model=FilmDetailed, description="Search Film by ID")
+@router.get(
+    "/{film_id}",
+    response_model=FilmDetailed,
+    summary="Получить описание кинопроизведения",
+    description="Подробное описание кинопроизведения",
+    response_description="Идентификатор, наименование, рейтинг, описание, список жанров, краткое представления об участниках кинопроизведения",
+    tags=['Детали'],
+)
 async def film_details(
     film_id: str, film_service: FilmService = Depends(get_film_service)
 ) -> FilmDetailed:
@@ -42,13 +50,20 @@ async def film_details(
     )
 
 
-@router.get("/", response_model=list[Film], description="Get Films List")
+@router.get(
+    "/",
+    response_model=list[Film],
+    summary="Получить список фильмов",
+    description="Список кинопроизведений с параметрами отбора, упорядочивания, пагинации",
+    response_description="Список кратких представлений кинопроизведений",
+    tags=['Списки'],
+)
 async def film_list(
     sort: str | None = None,
     genre_id: str | None = None,
     similar_to: str | None = None,
-    page_size: int = 50,
-    page_number: int = 1,
+    page_size: Annotated[int, Query(gt=0)] = 50,
+    page_number: Annotated[int, Query(gt=0)] = 1,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_films(
@@ -64,11 +79,18 @@ async def film_list(
     return films_to_return
 
 
-@router.get("/search/", response_model=list[Film], description="Search Films by Title")
+@router.get(
+    "/search/",
+    response_model=list[Film],
+    summary="Поиск по кинопроизведений",
+    description="Полнотекстовый поиск по кинопроизведениям",
+    response_description="Идентификатор, название и рейтинг кинопроизведения",
+    tags=['Полнотекстовый поиск'],
+)
 async def film_list_query(
     query: str = "",
-    page_number: int = 1,
-    page_size: int = 50,
+    page_number: Annotated[int, Query(gt=0)] = 1,
+    page_size: Annotated[int, Query(gt=0)] = 50,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_by_query(query, page_number, page_size)
