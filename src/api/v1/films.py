@@ -1,7 +1,8 @@
 from http import HTTPStatus
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from services.film import FilmService, get_film_service
@@ -61,8 +62,8 @@ async def film_list(
     sort: str | None = None,
     genre_id: str | None = None,
     similar_to: str | None = None,
-    page_size: int = 50,
-    page_number: int = 1,
+    page_size: Annotated[int, Query(gt=0)] = 50,
+    page_number: Annotated[int, Query(gt=0)] = 1,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_films(
@@ -88,8 +89,8 @@ async def film_list(
 )
 async def film_list_query(
     query: str = "",
-    page_number: int = 1,
-    page_size: int = 50,
+    page_number: Annotated[int, Query(gt=0)] = 1,
+    page_size: Annotated[int, Query(gt=0)] = 50,
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_by_query(query, page_number, page_size)
