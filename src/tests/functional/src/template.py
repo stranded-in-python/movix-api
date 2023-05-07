@@ -12,21 +12,21 @@ from api.v1 import films
 
 test_app = app
 
-@app.on_event("startup")
+@test_app.on_event("startup")
 async def mock_startup():
     redis_manager = mock_redis_manager(mock_redis_manager())
     await redis_manager.on_startup()
     elastic_manager = mock_elastic_manager(mock_elastic_client())
     await elastic_manager.on_startup()
 
-@app.on_event("shutdown")
+@test_app.on_event("shutdown")
 async def mock_shutdown():
     redis_manager = mock_redis_manager(mock_redis_manager())
     await redis_manager.on_shutdown()
     elastic_manager = mock_elastic_manager(mock_elastic_client())
     await elastic_manager.on_shutdown()  # type: ignore
 
-app.include_router(films.router, prefix="/api/v1/films", tags=["films"])
+test_app.include_router(films.router, prefix="/api/v1/films", tags=["films"])
 
 client = TestClient(test_app)
 
