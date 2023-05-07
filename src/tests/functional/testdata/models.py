@@ -1,7 +1,9 @@
 # не уверен что они нужны
 
 from uuid import UUID
+
 from pydantic import BaseModel
+
 
 class Film(BaseModel):
     uuid: UUID
