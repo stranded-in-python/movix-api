@@ -34,4 +34,3 @@ async def test_get_film_list(client):
     )
     assert response.status_code == 200, response.text
     assert len(response.json()) == 10
-
