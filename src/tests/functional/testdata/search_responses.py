@@ -69,3 +69,25 @@ UNPROCESSABLE = {
         }
     ]
 }
+
+UNPROCESSABLE_PG_GT_ZERO = {
+    "detail": [
+        {
+            "loc": ["query", "page_number"],
+            "msg": "ensure this value is greater than 0",
+            "type": "value_error.number.not_gt",
+            "ctx": {"limit_value": 0},
+        }
+    ]
+}
+
+UNPROCESSABLE_PS_GT_ZERO = {
+    "detail": [
+        {
+            "loc": ["query", "page_size"],
+            "msg": "ensure this value is greater than 0",
+            "type": "value_error.number.not_gt",
+            "ctx": {"limit_value": 0},
+        }
+    ]
+}

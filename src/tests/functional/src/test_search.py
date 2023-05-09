@@ -18,6 +18,7 @@ async def test_search_films_unprocessable(client):
         "/api/v1/films/search/?query=Star&page_number=-1&page_size=2"
     )
     assert response.status_code == 422, response.text
+    assert response.json() == UNPROCESSABLE_PG_GT_ZERO
 
 
 @pytest.mark.asyncio
@@ -44,6 +45,7 @@ async def test_search_persons_unprocessable(client):
         "/api/v1/persons/search?query=Carrie&page_size=-2&page_number=1"
     )
     assert response.status_code == 422, response.text
+    assert response.json() == UNPROCESSABLE_PS_GT_ZERO
 
 
 @pytest.mark.asyncio

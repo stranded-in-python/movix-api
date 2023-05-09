@@ -1,6 +1,6 @@
 import pytest
 from conftest import client, event_loop, test_app
-from testdata.films_responses import FILM_DETAILED_SUCCESS, FILM_DETAILED_UNPROCESSABLE
+from testdata.films_responses import *
 
 
 @pytest.mark.asyncio
@@ -14,6 +14,7 @@ async def test_get_by_id_ok(client):
 async def test_get_by_id_notfound(client):
     response = await client.get("/api/v1/films/0311ed51-8833-413f-bff5-0e139c11264a")
     assert response.status_code == 404, response.text
+    assert response.json() == FILM_DETAILED_NOTFOUND
 
 
 @pytest.mark.asyncio
