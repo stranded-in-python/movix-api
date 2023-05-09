@@ -1,7 +1,6 @@
 from asyncio import get_event_loop
 
 import pytest
-# from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
 from api.v1 import films, genres, persons
@@ -18,7 +17,7 @@ def event_loop():
     yield loop
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 async def test_app():
     test_app = app
 
@@ -45,7 +44,7 @@ async def test_app():
     yield test_app  # yield the application instance to the test function
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 async def client(test_app):
     async with AsyncClient(app=test_app, base_url="http://testserver") as client:
         yield client  # yield the client instance to the test function
