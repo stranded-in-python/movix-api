@@ -66,7 +66,7 @@ jobs:
             build-date=${{ github.event.head_commit.timestamp }}
 
       - name: Run pytest
-        run: docker compose -f tests.yml
+        run: docker compose -f tests.yml run api sh -c "pytest /app/tests/test_services/ && pytest /app/tests/functional/ && pytest /app/tests/test_db"
 
   builder:
     environment: production
