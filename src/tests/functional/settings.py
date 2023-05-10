@@ -11,4 +11,4 @@ class MoviesTestSettings(BaseSettings):
     service_url: str = 'http://127.0.0.1:9200'
 
 
-test_settings = TestSettings()
+test_settings = MoviesTestSettings()
