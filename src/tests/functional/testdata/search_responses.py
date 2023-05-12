@@ -1,13 +1,13 @@
 SEARCH_FILMS_SUCCESS = [
     {
-        "uuid": "996262ef-e565-426a-a25e-c6863eff474d",
-        "title": "The Star",
-        "imdb_rating": 6.2,
+        'imdb_rating': 4.6,
+        'title': 'Star',
+        'uuid': '4da05605-7127-45cc-bd50-f6f0bfec277e',
     },
     {
-        "uuid": "68e9a139-976d-4a83-ad1b-e374376814c9",
-        "title": "Star",
-        "imdb_rating": 6.6,
+        'imdb_rating': 7.8,
+        'title': 'Star',
+        'uuid': 'c9296cff-584a-4446-9f95-14ede2ddb42b',
     },
 ]
 
