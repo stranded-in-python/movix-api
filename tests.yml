@@ -14,6 +14,9 @@ services:
     entrypoint: sh -c "pytest /app"
     ports:
       - "8001:8000"
+    depends_on:
+      - redis
+      - elastic
 
   redis:
     image: redis:7.2-rc-bullseye
