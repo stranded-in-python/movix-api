@@ -6,3 +6,8 @@ skip-magic-trailing-comma = true
 [tool.pyright]
 venv = 'venv'
 venvPath = '.'
+
+[pytest]
+asyncio_mode = auto
+filterwarnings =
+    ignore::DeprecationWarning
