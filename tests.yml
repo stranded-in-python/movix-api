@@ -19,6 +19,9 @@ services:
     depends_on:
       - redis
       - elastic
+    environment:
+      redis_host: redis
+      elastic_endpoint: http://elastic:9200
 
   redis:
     image: redis:7.2-rc-bullseye
