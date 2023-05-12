@@ -11,7 +11,7 @@ services:
     stdin_open: true
     volumes:
       - ./src:/app:z
-    entrypoint: sh -c "pytest /app/tests/test_services/ && pytest /app/tests/functional/ && pytest /app/tests/test_db"
+    entrypoint: sh -c "pytest /app"
     ports:
       - "8001:8000"
 
