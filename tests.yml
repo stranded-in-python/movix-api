@@ -11,9 +11,9 @@ services:
     stdin_open: true
     volumes:
       - ./src:/app:z
-    entrypoint: sh -c "pytest /app/tests/test_services/ --asyncio-mode=auto -W ignore::DeprecationWarning"
-      && "pytest /app/tests/functional/ --asyncio-mode=auto -W ignore::DeprecationWarning"
-      && "pytest /app/tests/test_db --asyncio-mode=auto -W ignore::DeprecationWarning"
+    entrypoint: sh -c "pytest /app/tests/test_services/ --asyncio-mode=auto -W ignore::DeprecationWarning
+      && pytest /app/tests/functional/ --asyncio-mode=auto -W ignore::DeprecationWarning
+      && pytest /app/tests/test_db --asyncio-mode=auto -W ignore::DeprecationWarning"
     ports:
       - "8001:8000"
     depends_on:
