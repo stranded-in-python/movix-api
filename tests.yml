@@ -20,8 +20,8 @@ services:
       - redis
       - elastic
     environment:
-      REDIS_HOST: redis
-      ELASTIC_ENDPOINT: http://elastic:9200
+      REDIS_HOST: "redis"
+      ELASTIC_ENDPOINT: "http://elastic:9200"
 
   redis:
     image: redis:7.2-rc-bullseye
