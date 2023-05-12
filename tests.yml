@@ -2,13 +2,35 @@ version: "3.8"
 
 name: "movix_tests"
 
+volumes:
+  redis_data_local: {}
+
 services:
   api:
     image: ghcr.io/stranded-in-python/movix-api:dev
     stdin_open: true
-    command: "pytest /app"
     volumes:
       - ./src:/app:z
-    entrypoint: ""
+    entrypoint: sh -c "pytest /app"
     ports:
       - "8001:8000"
+
+  redis:
+    image: redis:7.2-rc-bullseye
+    volumes:
+      - redis_data_local:/data
+    ports:
+      - "6379:6379"
+
+  elastic:
+    image: ghcr.io/stranded-in-python/movix-elastic:ftests
+    #volumes:
+    #  - elastic_data_local:/usr/share/elasticsearch/data
+    #env_file:
+    #  - ./.envs/.local/.elastic
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
