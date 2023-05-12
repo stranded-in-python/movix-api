@@ -2,6 +2,9 @@ version: "3.8"
 
 name: "movix_tests"
 
+volumes:
+  redis_data_local: {}
+
 services:
   api:
     image: ghcr.io/stranded-in-python/movix-api:dev
