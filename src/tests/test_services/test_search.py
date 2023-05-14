@@ -1,6 +1,6 @@
 import pytest
 
-from tests.test_services.testdata.search_responses import *
+from tests.test_services.testdata import search_responses
 
 
 class TestSearch:
@@ -10,7 +10,7 @@ class TestSearch:
             "/api/v1/films/search/?query=Star&page_number=1&page_size=2"
         )
         assert response.status_code == 200, response.text
-        assert response.json() == SEARCH_FILMS_SUCCESS
+        assert response.json() == search_responses.SEARCH_FILMS_SUCCESS
 
     @pytest.mark.asyncio
     async def test_search_films_unprocessable(self, client):
@@ -25,7 +25,7 @@ class TestSearch:
             "/api/v1/films/search/?query=jkngjrkt&page_number=1&page_size=2"
         )
         assert response.status_code == 404, response.text
-        assert response.json() == SEARCH_FILMS_NOT_FOUND
+        assert response.json() == search_responses.SEARCH_FILMS_NOT_FOUND
 
     @pytest.mark.asyncio
     async def test_search_persons_ok(self, client):
@@ -33,7 +33,7 @@ class TestSearch:
             "/api/v1/persons/search?query=Carrie&page_size=2&page_number=1"
         )
         assert response.status_code == 200, response.text
-        assert response.json() == SEARCH_PERSONS_SUCCESS
+        assert response.json() == search_responses.SEARCH_PERSONS_SUCCESS
 
     @pytest.mark.asyncio
     async def test_search_persons_unprocessable(self, client):
@@ -48,4 +48,4 @@ class TestSearch:
             "/api/v1/persons/search?query=ASJGNRIJGNRKJEG&page_size=2&page_number=1"
         )
         assert response.status_code == 404, response.text
-        assert response.json() == SEARCH_PERSONS_NOT_FOUND
+        assert response.json() == search_responses.SEARCH_PERSONS_NOT_FOUND

@@ -11,8 +11,6 @@ class Client(ABC):
 
 
 class Manager(metaclass=Singleton):
-    _instance: Union['Manager', None]
-
     def __init__(self, client: Client):
         self._client = client
 
