@@ -63,5 +63,6 @@ RUN chmod +x /start
 
 # copy application code to WORKDIR
 COPY ./src ${APP_HOME}
+COPY ./pyproject.toml /pyproject.toml
 
 ENTRYPOINT ["/entrypoint"]
