@@ -11,6 +11,8 @@ pre-commit==2.21.0  # https://github.com/pre-commit/pre-commit
 # Testing
 # ------------------------------------------------------------------------------
 pytest==7.3.1
+pytest-mock==3.10.0
 pytest-asyncio==0.21.0
 pytest-sugar==0.9.7
 fakeredis==2.11.1
+aiohttp==3.8.4

@@ -65,6 +65,11 @@ jobs:
             maintainer=${{ github.actor }}
             build-date=${{ github.event.head_commit.timestamp }}
 
+      - name: Up test environment
+        run: |
+          docker compose -f tests.yml up -d
+          docker compose -f tests.yml logs elastic
+
       - name: Run pytest
         run: docker compose -f tests.yml run api pytest /app/
 
