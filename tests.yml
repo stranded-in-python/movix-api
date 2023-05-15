@@ -11,14 +11,12 @@ services:
     stdin_open: true
     volumes:
       - ./src:/app:z
-    command: sh -c "pytest /app/tests/test_services/ --asyncio-mode=auto -W ignore::DeprecationWarning
-      && pytest /app/tests/functional/ --asyncio-mode=auto -W ignore::DeprecationWarning
-      && pytest /app/tests/test_db --asyncio-mode=auto -W ignore::DeprecationWarning"
-    ports:
-      - "8001:8000"
     depends_on:
       - redis
       - elastic
+    command: sh -c "pytest /app"
+    ports:
+      - "8001:8000"
     environment:
       REDIS_HOST: "redis"
       ELASTIC_ENDPOINT: "http://elastic:9200"
@@ -32,10 +30,6 @@ services:
 
   elastic:
     image: ghcr.io/stranded-in-python/movix-elastic:ftests
-    #volumes:
-    #  - elastic_data_local:/usr/share/elasticsearch/data
-    #env_file:
-    #  - ./.envs/.local/.elastic
     ulimits:
       memlock:
         soft: -1
