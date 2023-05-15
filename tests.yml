@@ -15,8 +15,8 @@ services:
     ports:
       - "8001:8000"
     environment:
-      REDIS_HOST: "redis"
-      ELASTIC_ENDPOINT: "http://elastic:9200"
+      REDIS_HOST: "localhost"
+      ELASTIC_ENDPOINT: "localhost:9200"
 
   redis:
     image: redis:7.2-rc-bullseye
