@@ -14,6 +14,9 @@ services:
     command: sh -c "pytest /app"
     ports:
       - "8001:8000"
+    environment:
+      REDIS_HOST: "redis"
+      ELASTIC_ENDPOINT: "http://elastic:9200"
 
   redis:
     image: redis:7.2-rc-bullseye
@@ -24,10 +27,6 @@ services:
 
   elastic:
     image: ghcr.io/stranded-in-python/movix-elastic:ftests
-    #volumes:
-    #  - elastic_data_local:/usr/share/elasticsearch/data
-    #env_file:
-    #  - ./.envs/.local/.elastic
     ulimits:
       memlock:
         soft: -1
