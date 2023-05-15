@@ -7,12 +7,11 @@ from core.utils import orjson_dumps
 
 
 class JSONConfigMixin:
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
+    json_loads = orjson.loads
+    json_dumps = orjson_dumps
 
 
-class UUIDMixin(JSONConfigMixin, BaseModel):
+class UUIDMixin(BaseModel):
     id: UUID | str = Field(alias='uuid')
 
     @validator('id')
@@ -21,5 +20,5 @@ class UUIDMixin(JSONConfigMixin, BaseModel):
             return UUID(v)
         return v
 
-    class Config:
+    class Config(JSONConfigMixin):
         allow_population_by_field_name = True

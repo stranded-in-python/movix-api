@@ -38,7 +38,7 @@ class GenreService:
 
     @cache_decorator(get_cache())
     async def _get_popularity_from_elastic(self, genre_id: UUID) -> float | None:
-        query = {
+        query: dict = {
             "bool": {
                 "must": [
                     {"exists": {"field": "imdb_rating"}},
@@ -51,7 +51,7 @@ class GenreService:
                 ]
             }
         }
-        aggs = {"avg_imdb_rating": {"avg": {"field": "imdb_rating"}}}
+        aggs: dict = {"avg_imdb_rating": {"avg": {"field": "imdb_rating"}}}
 
         try:
             results = await get_elastic_manager().search(
@@ -65,8 +65,8 @@ class GenreService:
 
     @cache_decorator(get_cache())
     async def _get_genres_from_elastic(self) -> list[GenreShort | Genre] | None:
-        query = {"match_all": {}}
-        source = ["id", "name"]
+        query: dict = {"match_all": {}}
+        source: list = ["id", "name"]
 
         try:
             doc = await get_elastic_manager().search(

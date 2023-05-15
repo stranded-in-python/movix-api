@@ -1,18 +1,18 @@
 from datetime import datetime
 
-from models.mixins import JSONConfigMixin, UUIDMixin
+from models.mixins import UUIDMixin
 
 
-class GenreShort(UUIDMixin, JSONConfigMixin):
+class GenreShort(UUIDMixin):
     name: str
 
 
-class FilmShort(UUIDMixin, JSONConfigMixin):
+class FilmShort(UUIDMixin):
     title: str
     imdb_rating: float | None = None
 
 
-class PersonShort(UUIDMixin, JSONConfigMixin):
+class PersonShort(UUIDMixin):
     full_name: str
 
 
@@ -30,7 +30,7 @@ class Film(FilmShort):
     creation_date: datetime | None = None
 
 
-class FilmRoles(FilmShort, JSONConfigMixin):
+class FilmRoles(FilmShort):
     roles: list[str]
 
 

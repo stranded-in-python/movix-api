@@ -11,6 +11,9 @@ services:
     stdin_open: true
     volumes:
       - ./src:/app:z
+    depends_on:
+      - redis
+      - elastic
     command: sh -c "pytest /app"
     ports:
       - "8001:8000"

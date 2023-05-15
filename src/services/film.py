@@ -124,8 +124,8 @@ class FilmService:
     async def _get_films_from_elastic(
         self, sort: str | None, page_number: int, page_size: int
     ) -> list[FilmShort]:
-        query = {"match_all": {}}
-        body = {
+        query: dict = {"match_all": {}}
+        body: dict = {
             "from": page_number,
             "size": page_size,
             "query": query,

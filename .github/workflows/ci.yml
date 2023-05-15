@@ -71,7 +71,7 @@ jobs:
           docker compose -f tests.yml logs elastic
 
       - name: Run pytest
-        run: docker compose -f tests.yml run api pytest /app/
+        run: docker compose -f tests.yml run api
 
   builder:
     environment: production
