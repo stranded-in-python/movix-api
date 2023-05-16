@@ -5,6 +5,8 @@ import pytest
 
 from services.cache import Cache, cache_decorator, expired, prepare_key
 
+pytestmark = pytest.mark.asyncio
+
 
 def test_prepare_key():
     # Проверяем, что функция возвращает строку
@@ -53,7 +55,6 @@ def func() -> AsyncMock:
     return AsyncMock()
 
 
-@pytest.mark.asyncio
 async def test_cache_decorator_returns_cached_value(cache_storage, func):
     key = prepare_key(func, 1, 2, a=3, b=4)
     cache_storage.get.return_value = {
@@ -68,7 +69,6 @@ async def test_cache_decorator_returns_cached_value(cache_storage, func):
     assert result == 'cached_response'
 
 
-@pytest.mark.asyncio
 async def test_cache_decorator_calls_decorated_function_and_caches_response(
     cache_storage, func
 ):
@@ -84,7 +84,6 @@ async def test_cache_decorator_calls_decorated_function_and_caches_response(
     assert result == 'new_response'
 
 
-@pytest.mark.asyncio
 async def test_cache_decorator_raises_exception_if_cached_value_has_expired(
     cache_storage, func
 ):
