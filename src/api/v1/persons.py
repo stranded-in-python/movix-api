@@ -2,11 +2,12 @@ from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 
 from models.models import FilmShort, Person
 from services.film import FilmService, get_film_service
 from services.persons import PersonService, get_persons_service
+from .params import PaginateQueryParams
 
 router = APIRouter()
 
@@ -21,12 +22,11 @@ router = APIRouter()
 )
 async def person_list(
     query: str,
-    page_size: Annotated[int, Query(gt=0)] = None,
-    page_number: Annotated[int, Query(gt=0)] = None,
+    pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
     persons_service: PersonService = Depends(get_persons_service),
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Person]:
-    persons = await persons_service.get_by_query(query, page_size, page_number)
+    persons = await persons_service.get_by_query(query,  pagination_params.page_size,  pagination_params.page_number)
 
     if not persons:
         raise HTTPException(
@@ -52,8 +52,7 @@ async def person_list(
 )
 async def person_details(
     person_id: UUID,
-    page_size: Annotated[int, Query(gt=0)] | None = None,
-    page_number: Annotated[int, Query(gt=0)] | None = None,
+    pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
     persons_service: PersonService = Depends(get_persons_service),
     film_service: FilmService = Depends(get_film_service),
 ) -> Person:
@@ -63,7 +62,7 @@ async def person_details(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
 
     films = await film_service.get_films_with_roles_by_person(
-        person_id, page_size, page_number
+        person_id, pagination_params.page_size, pagination_params.page_number
     )
 
     if films is None:
@@ -82,8 +81,7 @@ async def person_details(
 )
 async def person_films(
     person_id: UUID,
-    page_size: Annotated[int, Query(gt=0)] | None = None,
-    page_number: Annotated[int, Query(gt=0)] | None = None,
+    pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
     persons_service: PersonService = Depends(get_persons_service),
     film_service: FilmService = Depends(get_film_service),
 ) -> list[FilmShort]:
@@ -92,7 +90,7 @@ async def person_films(
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
 
-    films = await film_service.get_films_by_person(person_id, page_size, page_number)
+    films = await film_service.get_films_by_person(person_id, pagination_params.page_size, pagination_params.page_number)
 
     if films is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
