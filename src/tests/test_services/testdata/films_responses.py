@@ -3,7 +3,7 @@ FILM_DETAILED_SUCCESS = {
     "title": "Star Wars: Episode V - The Empire Strikes Back",
     "imdb_rating": 8.7,
     "description": "Luke Skywalker, Han Solo, Princess Leia and Chewbacca face attack by the Imperial forces and its AT-AT walkers on the ice planet Hoth. While Han and Leia escape in the Millennium Falcon, Luke travels to Dagobah in search of Yoda. Only with the Jedi master's help will Luke survive when the dark side of the Force beckons him into the ultimate duel with Darth Vader.",
-    "genre": [
+    "genres": [
         {"uuid": "120a21cf-9097-479e-904a-13dd7198c1dd", "name": "Adventure"},
         {"uuid": "3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff", "name": "Action"},
         {"uuid": "6c162475-c7ed-4461-9184-001ef3d9f26e", "name": "Sci-Fi"},
