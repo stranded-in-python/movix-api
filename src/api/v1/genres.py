@@ -4,7 +4,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 
 from models.models import Genre, GenreShort
-from services.genres import GenreService, get_genres_service
+from services.abc import GenreServiceABC
+from services.genres import get_genres_service
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ router = APIRouter()
     tags=['Детали'],
 )
 async def genre_details(
-    genre_id: UUID, genre_service: GenreService = Depends(get_genres_service)
+    genre_id: UUID, genre_service: GenreServiceABC = Depends(get_genres_service)
 ) -> Genre:
     genre = await genre_service.get_by_id(genre_id)
 
@@ -37,7 +38,7 @@ async def genre_details(
     tags=['Списки'],
 )
 async def genre_list(
-    genre_service: GenreService = Depends(get_genres_service),
+    genre_service: GenreServiceABC = Depends(get_genres_service),
 ) -> list[GenreShort]:
     genres = await genre_service.get_genres()
 

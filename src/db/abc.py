@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Any
+
+from elastic_transport import ObjectApiResponse
 
 from core.utils import Singleton
 
@@ -26,3 +29,13 @@ class Manager(metaclass=Singleton):
 
     def get_client(self) -> Client:
         return self._client
+
+
+class ElasticManagerABC(Manager):
+    @abstractmethod
+    async def get(self, *args, **kwargs) -> ObjectApiResponse[Any]:
+        ...
+
+    @abstractmethod
+    async def search(self, *args, **kwargs) -> ObjectApiResponse[Any]:
+        ...

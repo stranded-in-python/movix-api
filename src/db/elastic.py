@@ -4,18 +4,16 @@ from elasticsearch import AsyncElasticsearch
 
 from core.config import settings
 
-from .abc import Client, Manager
+from .abc import Client, ElasticManagerABC
 
 
 class ElasticClient(AsyncElasticsearch, Client):
-    """
-    Обёртка для ElasticSearch
-    """
+    """Обёртка для ElasticSearch"""
 
     ...
 
 
-class ElasticManager(Manager):
+class ElasticManager(ElasticManagerABC):
     """
     Singleton для управления соединением с elasticsearch
     """

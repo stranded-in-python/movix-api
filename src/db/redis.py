@@ -75,7 +75,7 @@ class Cache(metaclass=Singleton):
             if not isinstance(serialized, (bytes, bytearray, memoryview)):
                 raise TypeError(f"Failed to deserialize value for key {key}")
             value = pickle.loads(serialized)
-        except TypeError or pickle.PicklingError as e:
+        except (TypeError, pickle.PicklingError) as e:
             logging.error(e)
         return value
 

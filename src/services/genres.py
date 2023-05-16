@@ -1,16 +1,22 @@
+from collections.abc import Callable
 from functools import lru_cache
 from uuid import UUID
 
 from elasticsearch import NotFoundError
 
+from db.abc import ElasticManagerABC
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import Genre, GenreShort
 
+from .abc import GenreServiceABC
 from .cache import cache_decorator
 
 
-class GenreService:
+class GenreService(GenreServiceABC):
+    def __init__(self, storage: Callable[[], ElasticManagerABC]):
+        self.storage = storage
+
     async def get_by_id(self, genre_id: UUID) -> Genre | None:
         """Данные по конкретному жанру."""
         genre = await self._get_genre_from_elastic(genre_id)
@@ -29,7 +35,7 @@ class GenreService:
     @cache_decorator(get_cache())
     async def _get_genre_from_elastic(self, genre_id: UUID) -> GenreShort | None:
         try:
-            doc = await get_elastic_manager().get(index='genres', id=genre_id)
+            doc = await self.storage().get(index='genres', id=genre_id)
 
         except NotFoundError:
             return None
@@ -54,7 +60,7 @@ class GenreService:
         aggs: dict = {"avg_imdb_rating": {"avg": {"field": "imdb_rating"}}}
 
         try:
-            results = await get_elastic_manager().search(
+            results = await self.storage().search(
                 index="movies", query=query, aggs=aggs
             )
 
@@ -69,7 +75,7 @@ class GenreService:
         source: list = ["id", "name"]
 
         try:
-            doc = await get_elastic_manager().search(
+            doc = await self.storage().search(
                 index="genres", query=query, source=source
             )
 
@@ -81,4 +87,4 @@ class GenreService:
 
 @lru_cache
 def get_genres_service() -> GenreService:
-    return GenreService()
+    return GenreService(storage=get_elastic_manager)

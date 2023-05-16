@@ -5,8 +5,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.models import FilmShort, Person
-from services.film import FilmService, get_film_service
-from services.persons import PersonService, get_persons_service
+from services.abc import FilmServiceABC, PersonServiceABC
+from services.film import get_film_service
+from services.persons import get_persons_service
 
 router = APIRouter()
 
@@ -21,10 +22,10 @@ router = APIRouter()
 )
 async def person_list(
     query: str,
-    page_size: Annotated[int, Query(gt=0)] = None,
-    page_number: Annotated[int, Query(gt=0)] = None,
-    persons_service: PersonService = Depends(get_persons_service),
-    film_service: FilmService = Depends(get_film_service),
+    page_size: Annotated[int | None, Query(gt=0)] = None,
+    page_number: Annotated[int | None, Query(gt=0)] = None,
+    persons_service: PersonServiceABC = Depends(get_persons_service),
+    film_service: FilmServiceABC = Depends(get_film_service),
 ) -> list[Person]:
     persons = await persons_service.get_by_query(query, page_size, page_number)
 
@@ -54,8 +55,8 @@ async def person_details(
     person_id: UUID,
     page_size: Annotated[int, Query(gt=0)] | None = None,
     page_number: Annotated[int, Query(gt=0)] | None = None,
-    persons_service: PersonService = Depends(get_persons_service),
-    film_service: FilmService = Depends(get_film_service),
+    persons_service: PersonServiceABC = Depends(get_persons_service),
+    film_service: FilmServiceABC = Depends(get_film_service),
 ) -> Person:
     person = await persons_service.get_by_id(person_id)
 
@@ -84,8 +85,8 @@ async def person_films(
     person_id: UUID,
     page_size: Annotated[int, Query(gt=0)] | None = None,
     page_number: Annotated[int, Query(gt=0)] | None = None,
-    persons_service: PersonService = Depends(get_persons_service),
-    film_service: FilmService = Depends(get_film_service),
+    persons_service: PersonServiceABC = Depends(get_persons_service),
+    film_service: FilmServiceABC = Depends(get_film_service),
 ) -> list[FilmShort]:
     person = await persons_service.get_by_id(person_id)
 

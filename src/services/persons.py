@@ -1,16 +1,22 @@
+from collections.abc import Callable
 from functools import lru_cache
 from uuid import UUID
 
 from elasticsearch import NotFoundError
 
+from db.abc import ElasticManagerABC
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import PersonShort
 
+from .abc import PersonServiceABC
 from .cache import cache_decorator
 
 
-class PersonService:
+class PersonService(PersonServiceABC):
+    def __init__(self, storage: Callable[[], ElasticManagerABC]):
+        self.storage: Callable[[], ElasticManagerABC] = storage
+
     async def get_by_id(self, person_id: UUID) -> PersonShort | None:
         """Данные по персоне."""
         return await self._get_person_from_elastic(person_id)
@@ -24,7 +30,7 @@ class PersonService:
     @cache_decorator(get_cache())
     async def _get_person_from_elastic(self, person_id: UUID) -> PersonShort | None:
         try:
-            doc = await get_elastic_manager().get(index='persons', id=person_id)
+            doc = await self.storage().get(index='persons', id=person_id)
 
         except NotFoundError:
             return None
@@ -39,7 +45,7 @@ class PersonService:
         source = ["id", "full_name"]
 
         try:
-            doc = await get_elastic_manager().search(
+            doc = await self.storage().search(
                 index="persons",
                 query=query,
                 source=source,
@@ -55,4 +61,4 @@ class PersonService:
 
 @lru_cache
 def get_persons_service() -> PersonService:
-    return PersonService()
+    return PersonService(storage=get_elastic_manager)
