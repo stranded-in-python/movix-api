@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 import pytest
 
 import tests.test_services.testdata.genres_responses as test_responses
@@ -12,7 +14,7 @@ class TestGenre:
             "/api/v1/genres/3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff"
         )
 
-        assert response.status_code == 200, response.text
+        assert response.status_code == HTTPStatus.OK, response.text
         assert response.json() == test_responses.GENRE_DETAILED_SUCCESS
 
     @pytest.mark.asyncio
@@ -22,21 +24,21 @@ class TestGenre:
             "/api/v1/genres/3d8d9bf5-0d90-4353-88ba-4ccc5d2c07aa"
         )
 
-        assert response.status_code == 404, response.text
+        assert response.status_code == HTTPStatus.NOT_FOUND, response.text
         assert response.json() == test_responses.GENRE_DETAILED_NOTFOUND
 
     @pytest.mark.asyncio
     async def test_get_by_id_unprocessable(self, client):
         response = await client.get("/api/v1/genres/Action")
 
-        assert response.status_code == 422, response.text
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.text
         assert response.json() == test_responses.GENRE_DETAILED_UNPROCESSABLE
 
     @pytest.mark.asyncio
     async def test_get_genre_list(self, client):
         """Проверка получения списка жанров"""
         response = await client.get("/api/v1/genres")
-        assert response.status_code == 200, response.text
+        assert response.status_code == HTTPStatus.OK, response.text
 
         response_list = response.json()
         assert isinstance(response_list, list)
