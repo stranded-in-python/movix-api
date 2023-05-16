@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from fastapi import Query
+from pydantic import BaseModel
 
 
 class PaginateQueryParams:
@@ -8,10 +8,7 @@ class PaginateQueryParams:
     def __init__(
         self,
         page_number: int = Query(
-            1,
-            title="Page number.",
-            description="Page number to return",
-            ge=1,
+            1, title="Page number.", description="Page number to return", ge=1
         ),
         page_size: int = Query(
             50,
@@ -36,4 +33,3 @@ class QueryParamPersonName(QueryParamMixin):
 
 class QueryParamPersonId(QueryParamMixin):
     id: str
-    

@@ -1,11 +1,11 @@
 from http import HTTPStatus
-from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from services.film import FilmService, get_film_service
+
 from .params import PaginateQueryParams
 
 router = APIRouter()
@@ -67,7 +67,11 @@ async def film_list(
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_films(
-        sort, pagination_params.page_size, pagination_params.page_number, genre_id, similar_to
+        sort,
+        pagination_params.page_size,
+        pagination_params.page_number,
+        genre_id,
+        similar_to,
     )
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
@@ -92,7 +96,9 @@ async def film_list_query(
     pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
-    films = await film_service.get_by_query(query, pagination_params.page_number, pagination_params.page_size)
+    films = await film_service.get_by_query(
+        query, pagination_params.page_number, pagination_params.page_size
+    )
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
     films_to_return = [
