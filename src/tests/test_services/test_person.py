@@ -4,9 +4,10 @@ import pytest
 
 import tests.test_services.testdata.person_responses as test_responses
 
+pytestmark = pytest.mark.asyncio
+
 
 class TestPerson:
-    @pytest.mark.asyncio
     async def test_get_by_id_ok(self, client):
         """Проверка успешного получения информации
         о персоне по корректному идентификатору"""
@@ -17,7 +18,6 @@ class TestPerson:
         assert response.status_code == HTTPStatus.OK, response.text
         assert response.json() == test_responses.PERSON_DETAILED_SUCCESS
 
-    @pytest.mark.asyncio
     async def test_get_by_id_not_found(self, client):
         """Проверка обработки несуществующего идентификатора персоны"""
         response = await client.get(
@@ -27,7 +27,6 @@ class TestPerson:
         assert response.status_code == HTTPStatus.NOT_FOUND, response.text
         assert response.json() == test_responses.PERSON_DETAILED_NOTFOUND
 
-    @pytest.mark.asyncio
     async def test_get_by_id_unprocessable(self, client):
         """Проверка обработки некорректного формата
         идентификатора персоны"""
@@ -36,7 +35,6 @@ class TestPerson:
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.text
         assert response.json() == test_responses.PERSON_DETAILED_UNPROCESSABLE
 
-    @pytest.mark.asyncio
     async def test_get_person_films_ok(self, client):
         """Проверка успешного получения списка фильмов персоны"""
         response = await client.get(
@@ -53,7 +51,6 @@ class TestPerson:
         assert "title" in response_list[0]
         assert "imdb_rating" in response_list[0]
 
-    @pytest.mark.asyncio
     async def test_get_person_films_not_found_person(self, client):
         """Проверка обработки несуществующего идентификатора персоны"""
         response = await client.get(
@@ -62,7 +59,6 @@ class TestPerson:
         assert response.status_code == HTTPStatus.NOT_FOUND, response.text
         assert response.json() == test_responses.PERSON_DETAILED_NOTFOUND
 
-    @pytest.mark.asyncio
     async def test_get_person_films_unprocessable_person_id(self, client):
         """Проверка обработки некорректного формата
         идентификатора персоны"""
@@ -70,7 +66,6 @@ class TestPerson:
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.text
         assert response.json() == test_responses.PERSON_DETAILED_UNPROCESSABLE
 
-    @pytest.mark.asyncio
     async def test_search_person_ok(self, client):
         """Проверка успешного поиска по персонам"""
         response = await client.get("/api/v1/persons/search?query=Harrison%20Ford")
@@ -90,7 +85,6 @@ class TestPerson:
         assert "imdb_rating" in response_list[0]["films"][0]
         assert "roles" in response_list[0]["films"][0]
 
-    @pytest.mark.asyncio
     async def test_search_person_not_found(self, client):
         """Проверка обработки пустого результата поиска:"""
         response = await client.get("/api/v1/persons/search?query=NOTFOUNDPERSON")

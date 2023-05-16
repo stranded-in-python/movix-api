@@ -4,9 +4,10 @@ import pytest
 
 import tests.test_services.testdata.genres_responses as test_responses
 
+pytestmark = pytest.mark.asyncio
+
 
 class TestGenre:
-    @pytest.mark.asyncio
     async def test_get_by_id_ok(self, client):
         """Проверка успешного получения информации о жанре
         по корректному идентификатору"""
@@ -17,7 +18,6 @@ class TestGenre:
         assert response.status_code == HTTPStatus.OK, response.text
         assert response.json() == test_responses.GENRE_DETAILED_SUCCESS
 
-    @pytest.mark.asyncio
     async def test_get_by_id_not_found(self, client):
         """Проверка обработки некорректного идентификатора жанра"""
         response = await client.get(
@@ -27,14 +27,12 @@ class TestGenre:
         assert response.status_code == HTTPStatus.NOT_FOUND, response.text
         assert response.json() == test_responses.GENRE_DETAILED_NOTFOUND
 
-    @pytest.mark.asyncio
     async def test_get_by_id_unprocessable(self, client):
         response = await client.get("/api/v1/genres/Action")
 
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.text
         assert response.json() == test_responses.GENRE_DETAILED_UNPROCESSABLE
 
-    @pytest.mark.asyncio
     async def test_get_genre_list(self, client):
         """Проверка получения списка жанров"""
         response = await client.get("/api/v1/genres")
