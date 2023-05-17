@@ -68,8 +68,7 @@ async def film_list(
 ) -> list[Film]:
     films = await film_service.get_films(
         sort,
-        pagination_params.page_size,
-        pagination_params.page_number,
+        pagination_params,
         genre_id,
         similar_to,
     )
@@ -97,7 +96,7 @@ async def film_list_query(
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_by_query(
-        query, pagination_params.page_number, pagination_params.page_size
+        query, pagination_params
     )
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")

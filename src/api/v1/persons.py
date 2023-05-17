@@ -27,7 +27,7 @@ async def person_list(
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Person]:
     persons = await persons_service.get_by_query(
-        query, pagination_params.page_size, pagination_params.page_number
+        query, pagination_params
     )
 
     if not persons:
@@ -38,7 +38,7 @@ async def person_list(
     return [
         Person(
             **dict(person),
-            films=await film_service.get_films_with_roles_by_person(person.id),
+            films=await film_service.get_films_with_roles_by_person(person.id, pagination_params),
         )
         for person in persons
     ]
@@ -64,7 +64,7 @@ async def person_details(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
 
     films = await film_service.get_films_with_roles_by_person(
-        person_id, pagination_params.page_size, pagination_params.page_number
+        person_id, pagination_params
     )
 
     if films is None:
@@ -93,7 +93,7 @@ async def person_films(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
 
     films = await film_service.get_films_by_person(
-        person_id, pagination_params.page_size, pagination_params.page_number
+        person_id, pagination_params
     )
 
     if films is None:
