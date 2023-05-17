@@ -31,7 +31,7 @@ async def film_details(
         title=film.title,
         imdb_rating=film.imdb_rating,
         description=film.description,
-        genre=film.genres,
+        genres=film.genres,
         actors=film.actors,
         writers=film.writers,
         directors=film.directors,
