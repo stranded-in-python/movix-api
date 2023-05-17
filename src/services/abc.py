@@ -3,6 +3,8 @@ from collections.abc import Callable
 from typing import Any
 from uuid import UUID
 
+from pydantic import BaseModel
+
 from api.v1.params import PaginateQueryParams
 from db.abc import StorageManager
 from models.models import Film, FilmRoles, FilmShort, Genre, GenreShort, PersonShort
@@ -14,16 +16,16 @@ class StorageABC(ABC):
         self.manager = manager
 
     @abstractmethod
-    def get_item(self, item_id: str) -> dict:
+    def get_item(self, item_id: str) -> BaseModel | None:
         ...
 
     @abstractmethod
     def get_items(
         self,
-        sort_order: dict[str, Any],
-        pagination: PaginateQueryParams,
         filters: str | None = None,
-    ) -> dict:
+        sort_order: dict[str, Any] | None = None,
+        pagination: PaginateQueryParams | None = None,
+    ) -> list[BaseModel]:
         ...
 
 
@@ -80,6 +82,10 @@ class FilmServiceABC(ABC):
         ...
 
 
+class FilmStorageABC(StorageABC, ABC):
+    ...
+
+
 class GenreServiceABC(ABC):
     @abstractmethod
     async def get_by_id(self, genre_id: UUID) -> Genre | None:
@@ -87,6 +93,20 @@ class GenreServiceABC(ABC):
 
     @abstractmethod
     async def get_genres(self) -> list[GenreShort] | None:
+        ...
+
+
+class GenreStorageABC(StorageABC):
+    @abstractmethod
+    async def get_item(self, item_id: UUID) -> GenreShort | None:
+        ...
+
+    @abstractmethod
+    async def get_genre_popularity(self, genre_id: UUID) -> float | None:
+        ...
+
+    @abstractmethod
+    async def get_items(self) -> list[GenreShort | Genre] | None:
         ...
 
 
@@ -99,4 +119,14 @@ class PersonServiceABC(ABC):
     async def get_by_query(
         self, name: str, page_size: int | None = None, page_number: int | None = None
     ) -> list[PersonShort]:
+        ...
+
+
+class PersonStorageABC(StorageABC):
+    @abstractmethod
+    async def get_item(self, item_id: UUID) -> PersonShort | None:
+        ...
+
+    @abstractmethod
+    async def get_items(self) -> list[PersonShort] | None:
         ...

@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from collections.abc import Callable
 from functools import lru_cache
 from uuid import UUID
@@ -10,22 +9,8 @@ from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import Genre, GenreShort
 
-from .abc import GenreServiceABC, StorageABC
+from .abc import GenreServiceABC, GenreStorageABC
 from .cache import cache_decorator
-
-
-class GenreStorageABC(StorageABC):
-    @abstractmethod
-    async def get_item(self, item_id: UUID) -> GenreShort | None:
-        ...
-
-    @abstractmethod
-    async def get_genre_popularity(self, genre_id: UUID) -> float | None:
-        ...
-
-    @abstractmethod
-    async def get_items(self) -> list[GenreShort | Genre] | None:
-        ...
 
 
 class GenreElasticStorage(GenreStorageABC):

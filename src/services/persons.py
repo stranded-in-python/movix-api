@@ -9,26 +9,18 @@ from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import PersonShort
 
-from .abc import PersonServiceABC
+from .abc import PersonServiceABC, PersonStorageABC
 from .cache import cache_decorator
 
 
-class PersonService(PersonServiceABC):
-    def __init__(self, storage: Callable[[], ElasticManagerABC]):
-        self.storage: Callable[[], ElasticManagerABC] = storage
-
-    async def get_by_id(self, person_id: UUID) -> PersonShort | None:
-        """Данные по персоне."""
-        return await self._get_person_from_elastic(person_id)
-
-    async def get_by_query(self, name: str, pagination_params) -> list[PersonShort]:
-        """Поиск по персонам."""
-        return await self._get_persons_from_elastic(name, pagination_params)
+class PersonElasticStorage(PersonStorageABC):
+    def __init__(self, manager: Callable[[], ElasticManagerABC]):
+        self.manager = manager
 
     @cache_decorator(get_cache())
-    async def _get_person_from_elastic(self, person_id: UUID) -> PersonShort | None:
+    async def get_item(self, person_id: UUID) -> PersonShort | None:
         try:
-            doc = await self.storage().get(index='persons', id=person_id)
+            doc = await self.manager().get(index='persons', id=person_id)
 
         except NotFoundError:
             return None
@@ -36,14 +28,12 @@ class PersonService(PersonServiceABC):
         return PersonShort(**doc.body['_source'])
 
     @cache_decorator(get_cache())
-    async def _get_persons_from_elastic(
-        self, name: str, pagination_params
-    ) -> list[PersonShort]:
-        query = {"match": {"full_name": name}}
+    async def get_items(self, filters: str, pagination_params) -> list[PersonShort]:
+        query = {"match": {"full_name": filters}}
         source = ["id", "full_name"]
 
         try:
-            doc = await self.storage().search(
+            doc = await self.manager().search(
                 index="persons",
                 query=query,
                 source=source,
@@ -57,6 +47,19 @@ class PersonService(PersonServiceABC):
         return list(PersonShort(**hit["_source"]) for hit in doc["hits"]["hits"])
 
 
+class PersonService(PersonServiceABC):
+    def __init__(self, storage: PersonStorageABC):
+        self.storage = storage
+
+    async def get_by_id(self, item_id: UUID) -> PersonShort | None:
+        """Данные по персоне."""
+        return await self.storage.get_item(item_id)
+
+    async def get_by_query(self, name: str, pagination_params) -> list[PersonShort]:
+        """Поиск по персонам."""
+        return await self.storage.get_items(name, pagination_params)
+
+
 @lru_cache
 def get_persons_service() -> PersonService:
-    return PersonService(storage=get_elastic_manager)
+    return PersonService(storage=PersonElasticStorage(get_elastic_manager))

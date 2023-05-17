@@ -1,54 +1,36 @@
-from abc import abstractmethod
-from collections.abc import Callable
 from functools import lru_cache
 from typing import Any, Optional
 from uuid import UUID
 
 from elasticsearch import NotFoundError
 
-from db.abc import ElasticManagerABC
 from db.elastic import get_manager as get_elastic_manager
 from db.redis import get_cache
 from models.models import Film, FilmRoles, FilmShort
 
-from .abc import FilmServiceABC, StorageABC
 from .cache import cache_decorator
 
 
-class FilmStorageABC(StorageABC):
-    @abstractmethod
-    async def get_film(self, film_id: UUID) -> Optional[Film]:
-        ...
-
-
-class FilmElasticStorage(FilmStorageABC):
-    def __init__(self, manager: Callable[[], ElasticManagerABC]):
-        self.manager = manager
-
-    @cache_decorator(get_cache())
-    async def get_film(self, film_id: UUID) -> Optional[Film]:
-        try:
-            doc = await self.manager.get(index='movies', id=film_id)
-        except NotFoundError:
-            return None
-        return Film(**doc['_source'])
-
-    def get_item(self, id: UUID):
-        pass
-
-
-class FilmService(FilmServiceABC):
-    def __init__(self, storage: FilmStorageABC):
-        self.storage = storage
+class FilmService:
+    def __init__(self):
         self._person_roles = {
             "actors_inner_hits": "actor",
             "directors_inner_hits": "director",
             "writers_inner_hits": "writer",
         }
 
-    async def get_by_id(self, film_id: UUID) -> Optional[Film]:
+    async def get_by_id(self, film_id: str) -> Optional[Film]:
         """Получить фильм по ID"""
-        return await self.storage.get_film(film_id)
+        film = await self._get_film_from_elastic(film_id)
+        return film
+
+    @cache_decorator(get_cache())
+    async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
+        try:
+            doc = await get_elastic_manager().get(index='movies', id=film_id)
+        except NotFoundError:
+            return None
+        return Film(**doc['_source'])
 
     def _sort_2_order(self, sort: str | None) -> dict[str, Any]:
         if not sort:
@@ -103,7 +85,7 @@ class FilmService(FilmServiceABC):
             "_source": ["id", "imdb_rating", "title"],
         }
         try:
-            doc = await self.storage().search(
+            doc = await get_elastic_manager().search(
                 index="movies", body=body, **self._sort_2_order(sort)
             )
         except NotFoundError:
@@ -116,7 +98,7 @@ class FilmService(FilmServiceABC):
     ) -> list[FilmShort]:
         """Получить похожие фильмы. Похожими фильмами являются фильмы в одном жанре"""
         try:
-            doc = await self.storage().get(index='movies', id=film_id)
+            doc = await get_elastic_manager().get(index='movies', id=film_id)
         except NotFoundError:
             return []
         genres_to_search = [elem['name'] for elem in doc['_source']['genres']]
@@ -128,7 +110,7 @@ class FilmService(FilmServiceABC):
             "_source": ["id", "imdb_rating", "title"],
         }
         try:
-            doc = await self.storage().search(
+            doc = await get_elastic_manager().search(
                 index="movies", body=body, **self._sort_2_order(sort)
             )
         except NotFoundError:
@@ -147,7 +129,7 @@ class FilmService(FilmServiceABC):
             "_source": ["id", "imdb_rating", "title"],
         }
         try:
-            doc = await self.storage().search(
+            doc = await get_elastic_manager().search(
                 index="movies", body=body, **self._sort_2_order(sort)
             )
         except NotFoundError:
@@ -169,7 +151,7 @@ class FilmService(FilmServiceABC):
                 "query": query,
                 "_source": ["id", "imdb_rating", "title"],
             }
-            doc = await self.storage().search(index="movies", body=body)
+            doc = await get_elastic_manager().search(index="movies", body=body)
         except NotFoundError:
             return []
         return [FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
@@ -227,7 +209,7 @@ class FilmService(FilmServiceABC):
             }
             source = ["id", "imdb_rating", "title"]
 
-            docs = await self.storage().search(
+            docs = await get_elastic_manager().search(
                 index="movies",
                 query=query,
                 source=source,
@@ -282,7 +264,7 @@ class FilmService(FilmServiceABC):
             }
             source = ["id", "imdb_rating", "title"]
 
-            doc = await self.storage().search(
+            doc = await get_elastic_manager().search(
                 index="movies",
                 query=query,
                 source=source,
@@ -298,4 +280,4 @@ class FilmService(FilmServiceABC):
 
 @lru_cache
 def get_film_service() -> FilmService:
-    return FilmService(storage=get_elastic_manager)
+    return FilmService()
