@@ -20,5 +20,6 @@ class PaginateQueryParams:
         self.page_number = page_number
         self.page_size = page_size
 
+
 class Ass:
     pass
