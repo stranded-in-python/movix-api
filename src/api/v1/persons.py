@@ -7,7 +7,7 @@ from models.models import FilmShort, Person
 from services.film import FilmService, get_film_service
 from services.persons import PersonService, get_persons_service
 
-from .params import PaginateQueryParams
+from core.pagination import PaginateQueryParams
 
 router = APIRouter()
 

@@ -1,12 +1,12 @@
 from http import HTTPStatus
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from services.film import FilmService, get_film_service
 
-from .params import PaginateQueryParams
+from core.pagination import PaginateQueryParams
 
 router = APIRouter()
 
