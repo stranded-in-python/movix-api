@@ -1,17 +1,29 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from typing import Any
 from uuid import UUID
 
-from db.abc import Manager
+from api.v1.params import PaginateQueryParams
+from db.abc import StorageManager
 from models.models import Film, FilmRoles, FilmShort, Genre, GenreShort, PersonShort
 
 
 class StorageABC(ABC):
-    def __init__(self, manager: Callable[[], Manager]):
+    @abstractmethod
+    def __init__(self, manager: Callable[[], StorageManager]):
         self.manager = manager
 
     @abstractmethod
-    def get_item(self, id: UUID):
+    def get_item(self, item_id: str) -> dict:
+        ...
+
+    @abstractmethod
+    def get_items(
+        self,
+        sort_order: dict[str, Any],
+        pagination: PaginateQueryParams,
+        filters: str | None = None,
+    ) -> dict:
         ...
 
 

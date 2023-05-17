@@ -7,12 +7,12 @@ from redis.asyncio import Redis
 from core.config import settings
 from core.utils import Singleton
 
-from .abc import Client, Manager
+from .abc import StorageClient, StorageManager
 
 redis: Optional[Redis] = None
 
 
-class RedisClient(Redis, Client):
+class RedisClient(Redis, StorageClient):
     """
     Обёртка для redis
     """
@@ -20,7 +20,7 @@ class RedisClient(Redis, Client):
     ...
 
 
-class RedisManager(Manager):
+class RedisManager(StorageManager):
     """
     Singleton для обертки соединения к Redis
     """

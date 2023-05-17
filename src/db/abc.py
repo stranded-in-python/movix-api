@@ -6,18 +6,18 @@ from elastic_transport import ObjectApiResponse
 from core.utils import Singleton
 
 
-class Client(ABC):
+class StorageClient(ABC):
     @abstractmethod
     async def close(self):
         ...
 
 
-class Manager(metaclass=Singleton):
-    def __init__(self, client: Client):
+class StorageManager(metaclass=Singleton):
+    def __init__(self, client: StorageClient):
         self._client = client
 
     @classmethod
-    def get_instance(cls: type['Manager']):
+    def get_instance(cls: type['StorageManager']):
         return cls._instances.get(cls)
 
     async def on_shutdown(self):
@@ -27,11 +27,11 @@ class Manager(metaclass=Singleton):
     async def on_startup(self):
         ...
 
-    def get_client(self) -> Client:
+    def get_client(self) -> StorageClient:
         return self._client
 
 
-class ElasticManagerABC(Manager):
+class ElasticManagerABC(StorageManager):
     @abstractmethod
     async def get(self, *args, **kwargs) -> ObjectApiResponse[Any]:
         ...

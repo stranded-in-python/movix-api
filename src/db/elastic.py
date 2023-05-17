@@ -4,10 +4,10 @@ from elasticsearch import AsyncElasticsearch
 
 from core.config import settings
 
-from .abc import Client, ElasticManagerABC
+from .abc import ElasticManagerABC, StorageClient
 
 
-class ElasticClient(AsyncElasticsearch, Client):
+class ElasticClient(AsyncElasticsearch, StorageClient):
     """Обёртка для ElasticSearch"""
 
     ...
