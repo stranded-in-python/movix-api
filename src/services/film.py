@@ -56,9 +56,7 @@ class FilmService:
         if genre_id and not similar_to:
             return await self.get_films_by_genre(sort, pagination_params, genre_id)
         if similar_to:
-            return await self.get_similar_films(
-                sort, pagination_params, similar_to
-            )
+            return await self.get_similar_films(sort, pagination_params, similar_to)
 
         return await self._get_films_from_elastic(sort, pagination_params)
 
@@ -138,9 +136,7 @@ class FilmService:
             return []
         return [FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
-    async def get_by_query(
-        self, query: str, pagination_params
-    ) -> list[FilmShort]:
+    async def get_by_query(self, query: str, pagination_params) -> list[FilmShort]:
         return await self._get_qfilm_from_elastic(query, pagination_params)
 
     @cache_decorator(get_cache())
@@ -161,9 +157,7 @@ class FilmService:
         return [FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
     async def get_films_with_roles_by_person(
-        self,
-        person_id: UUID,
-        pagination_params
+        self, person_id: UUID, pagination_params
     ) -> list[FilmRoles]:
         """Получить фильмы персоны с его ролью"""
 
@@ -173,9 +167,7 @@ class FilmService:
 
     @cache_decorator(get_cache())
     async def _get_films_with_roles_by_person_from_elastic(
-        self,
-        person_id: UUID,
-        pagination_params
+        self, person_id: UUID, pagination_params
     ) -> list[FilmRoles]:
         def parse_roles(inner_hits: dict) -> list[str]:
             return list(
@@ -234,9 +226,7 @@ class FilmService:
         )
 
     async def get_films_by_person(
-        self,
-        person_id: UUID,
-        pagination_params
+        self, person_id: UUID, pagination_params
     ) -> list[FilmShort]:
         """Получить список фильмов в кратком представлении по персоне"""
         return await self._get_films_by_person_from_elastic(
@@ -245,9 +235,7 @@ class FilmService:
 
     @cache_decorator(get_cache())
     async def _get_films_by_person_from_elastic(
-        self,
-        person_id: UUID,
-        pagination_params
+        self, person_id: UUID, pagination_params
     ) -> list[FilmShort]:
         try:
             query = {

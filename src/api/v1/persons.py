@@ -26,9 +26,7 @@ async def person_list(
     persons_service: PersonService = Depends(get_persons_service),
     film_service: FilmService = Depends(get_film_service),
 ) -> list[Person]:
-    persons = await persons_service.get_by_query(
-        query, pagination_params
-    )
+    persons = await persons_service.get_by_query(query, pagination_params)
 
     if not persons:
         raise HTTPException(
@@ -38,7 +36,9 @@ async def person_list(
     return [
         Person(
             **dict(person),
-            films=await film_service.get_films_with_roles_by_person(person.id, pagination_params),
+            films=await film_service.get_films_with_roles_by_person(
+                person.id, pagination_params
+            ),
         )
         for person in persons
     ]
@@ -92,9 +92,7 @@ async def person_films(
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
 
-    films = await film_service.get_films_by_person(
-        person_id, pagination_params
-    )
+    films = await film_service.get_films_by_person(person_id, pagination_params)
 
     if films is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")

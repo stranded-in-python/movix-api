@@ -15,9 +15,7 @@ class PersonService:
         """Данные по персоне."""
         return await self._get_person_from_elastic(person_id)
 
-    async def get_by_query(
-        self, name: str, pagination_params
-    ) -> list[PersonShort]:
+    async def get_by_query(self, name: str, pagination_params) -> list[PersonShort]:
         """Поиск по персонам."""
         return await self._get_persons_from_elastic(name, pagination_params)
 
