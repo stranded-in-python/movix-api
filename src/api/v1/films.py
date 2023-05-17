@@ -1,12 +1,13 @@
 from http import HTTPStatus
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 
 from models.models import Film, FilmShort
 from services.abc import FilmServiceABC
 from services.film import get_film_service
+
+from .params import PaginateQueryParams
 
 router = APIRouter()
 
@@ -30,7 +31,7 @@ async def film_details(
         title=film.title,
         imdb_rating=film.imdb_rating,
         description=film.description,
-        genres=film.genres,
+        genre=film.genres,
         actors=film.actors,
         writers=film.writers,
         directors=film.directors,
@@ -49,13 +50,10 @@ async def film_list(
     sort: str | None = None,
     genre_id: str | None = None,
     similar_to: str | None = None,
-    page_size: Annotated[int, Query(gt=0)] = 50,
-    page_number: Annotated[int, Query(gt=0)] = 1,
+    pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
     film_service: FilmServiceABC = Depends(get_film_service),
-) -> list[FilmShort]:
-    films = await film_service.get_films(
-        sort, page_size, page_number, genre_id, similar_to
-    )
+) -> list[Film]:
+    films = await film_service.get_films(sort, pagination_params, genre_id, similar_to)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
 
@@ -76,11 +74,10 @@ async def film_list(
 )
 async def film_list_query(
     query: str = "",
-    page_number: Annotated[int, Query(gt=0)] = 1,
-    page_size: Annotated[int, Query(gt=0)] = 50,
+    pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
     film_service: FilmServiceABC = Depends(get_film_service),
-) -> list[FilmShort]:
-    films = await film_service.get_by_query(query, page_number, page_size)
+) -> list[Film]:
+    films = await film_service.get_by_query(query, pagination_params)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
     films_to_return = [

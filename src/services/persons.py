@@ -21,11 +21,9 @@ class PersonService(PersonServiceABC):
         """Данные по персоне."""
         return await self._get_person_from_elastic(person_id)
 
-    async def get_by_query(
-        self, name: str, page_size: int | None = None, page_number: int | None = None
-    ) -> list[PersonShort]:
+    async def get_by_query(self, name: str, pagination_params) -> list[PersonShort]:
         """Поиск по персонам."""
-        return await self._get_persons_from_elastic(name, page_size, page_number)
+        return await self._get_persons_from_elastic(name, pagination_params)
 
     @cache_decorator(get_cache())
     async def _get_person_from_elastic(self, person_id: UUID) -> PersonShort | None:
@@ -39,7 +37,7 @@ class PersonService(PersonServiceABC):
 
     @cache_decorator(get_cache())
     async def _get_persons_from_elastic(
-        self, name: str, page_size: int | None = None, page_number: int | None = None
+        self, name: str, pagination_params
     ) -> list[PersonShort]:
         query = {"match": {"full_name": name}}
         source = ["id", "full_name"]
@@ -49,8 +47,8 @@ class PersonService(PersonServiceABC):
                 index="persons",
                 query=query,
                 source=source,
-                from_=page_number,
-                size=page_size,
+                from_=pagination_params.page_number,
+                size=pagination_params.page_size,
             )
 
         except NotFoundError:

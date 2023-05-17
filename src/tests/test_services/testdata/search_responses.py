@@ -19,12 +19,6 @@ SEARCH_PERSONS_SUCCESS = [
         "full_name": "Carrie Beck",
         "films": [
             {
-                "uuid": "a9d52337-3249-49ae-92b8-65ee9ebaf359",
-                "title": "Star Wars Rebels",
-                "imdb_rating": 8,
-                "roles": ["writer"],
-            },
-            {
                 "uuid": "5065b37b-fd5b-4c48-8a24-435198c44830",
                 "title": "Star Wars Resistance",
                 "imdb_rating": 4.9,
@@ -36,25 +30,12 @@ SEARCH_PERSONS_SUCCESS = [
                 "imdb_rating": 7.5,
                 "roles": ["writer"],
             },
-            {
-                "uuid": "75475f58-c0ea-4d6d-9f78-bb44d971a21f",
-                "title": "Lego Star Wars: All-Stars",
-                "imdb_rating": 6.5,
-                "roles": ["writer"],
-            },
         ],
     },
     {
         "uuid": "cbceaa01-910c-4f0e-b992-7faf7d27131a",
         "full_name": "Carrie Underwood",
-        "films": [
-            {
-                "uuid": "01f81c66-d968-4375-bbb0-65103aa214d1",
-                "title": "Carrie Underwood: An All-Star Holiday Special",
-                "imdb_rating": 8.2,
-                "roles": ["actor"],
-            }
-        ],
+        "films": [],
     },
 ]
 

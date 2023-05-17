@@ -1,7 +1,18 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from uuid import UUID
 
+from db.abc import Manager
 from models.models import Film, FilmRoles, FilmShort, Genre, GenreShort, PersonShort
+
+
+class StorageABC(ABC):
+    def __init__(self, manager: Callable[[], Manager]):
+        self.manager = manager
+
+    @abstractmethod
+    def get_item(self, id: UUID):
+        ...
 
 
 class FilmServiceABC(ABC):

@@ -7,14 +7,14 @@ volumes:
 
 services:
   api:
-    image: ghcr.io/stranded-in-python/movix-api:dev
+    image: 19331c8a02081a1b00c2f608975471e17790097e4d8a4853be0710ba82e61744
     stdin_open: true
     volumes:
       - ./src:/app:z
     depends_on:
       - redis
       - elastic
-    command: sh -c "pytest /app"
+    command: sh -c "pytest /app -vv"
     ports:
       - "8001:8000"
     environment:
