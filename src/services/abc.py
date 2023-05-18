@@ -20,11 +20,11 @@ class FilmServiceABC(ABC):
     ) -> list[models.FilmShort]:
         ...
 
-    @abstractmethod
-    async def get_similar_films(
-        self, sort: str | None, page_size: int, page_number: int, film_id: str
-    ) -> list[models.FilmShort]:
-        ...
+    # @abstractmethod
+    # async def get_similar_films(
+    #     self, sort: str | None, page_size: int, page_number: int, film_id: str
+    # ) -> list[models.FilmShort]:
+    #     ...
 
     @abstractmethod
     async def get_by_query(
@@ -32,29 +32,29 @@ class FilmServiceABC(ABC):
     ) -> list[models.FilmShort]:
         ...
 
-    @abstractmethod
-    async def get_films_by_genre(
-        self, sort: str | None, page_size: int, page_number: int, genre_id: str
-    ) -> list[models.FilmShort]:
-        ...
+    # @abstractmethod
+    # async def get_films_by_genre(
+    #     self, sort: str | None, page_size: int, page_number: int, genre_id: str
+    # ) -> list[models.FilmShort]:
+    #     ...
 
-    @abstractmethod
-    async def get_films_with_roles_by_person(
-        self,
-        person_id: UUID,
-        page_size: int | None = None,
-        page_number: int | None = None,
-    ) -> list[models.FilmRoles]:
-        ...
+    # @abstractmethod
+    # async def get_films_with_roles_by_person(
+    #     self,
+    #     person_id: UUID,
+    #     page_size: int | None = None,
+    #     page_number: int | None = None,
+    # ) -> list[models.FilmRoles]:
+    #     ...
 
-    @abstractmethod
-    async def get_films_by_person(
-        self,
-        person_id: UUID,
-        page_size: int | None = None,
-        page_number: int | None = None,
-    ) -> list[models.FilmShort]:
-        ...
+    # @abstractmethod
+    # async def get_films_by_person(
+    #     self,
+    #     person_id: UUID,
+    #     page_size: int | None = None,
+    #     page_number: int | None = None,
+    # ) -> list[models.FilmShort]:
+    #     ...
 
 
 class GenreServiceABC(ABC):

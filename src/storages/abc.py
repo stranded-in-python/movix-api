@@ -28,7 +28,7 @@ class StorageABC(ABC):
         ...
 
 
-class FilmStorageABC(StorageABC, ABC):
+class FilmStorageABC(StorageABC):
     @abstractmethod
     async def get_item(self, item_id: UUID) -> models.Film | None:
         ...    

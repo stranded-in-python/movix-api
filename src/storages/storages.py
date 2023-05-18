@@ -22,7 +22,7 @@ class FilmElasticStorage(FilmStorageABC):
         except NotFoundError:
             return None
 
-        return models.FilmShort(**doc.body['_source'])
+        return models.Film(**doc.body['_source'])
 
     def _sort_2_order(self, sort: str | None) -> dict[str, Any]:
         if not sort:
@@ -44,6 +44,7 @@ class FilmElasticStorage(FilmStorageABC):
         similar_to: str | None,
     ) -> list[models.FilmShort] | None:
         
+
         if genre_id and not similar_to:
             return await self.get_films_by_genre(sort, pagination_params, genre_id)
         if similar_to:
