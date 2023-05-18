@@ -1,50 +1,12 @@
-from collections.abc import Callable
 from functools import lru_cache
 from uuid import UUID
 
-from elasticsearch import NotFoundError
-
-from db.abc import ElasticManagerABC
 from db.elastic import get_manager as get_elastic_manager
-from db.redis import get_cache
 from models.models import PersonShort
+from storages.abc import PersonStorageABC
+from storages.storages import PersonElasticStorage
 
-from .abc import PersonServiceABC, PersonStorageABC
-from .cache import cache_decorator
-
-
-class PersonElasticStorage(PersonStorageABC):
-    def __init__(self, manager: Callable[[], ElasticManagerABC]):
-        self.manager = manager
-
-    @cache_decorator(get_cache())
-    async def get_item(self, person_id: UUID) -> PersonShort | None:
-        try:
-            doc = await self.manager().get(index='persons', id=person_id)
-
-        except NotFoundError:
-            return None
-
-        return PersonShort(**doc.body['_source'])
-
-    @cache_decorator(get_cache())
-    async def get_items(self, filters: str, pagination_params) -> list[PersonShort]:
-        query = {"match": {"full_name": filters}}
-        source = ["id", "full_name"]
-
-        try:
-            doc = await self.manager().search(
-                index="persons",
-                query=query,
-                source=source,
-                from_=pagination_params.page_number,
-                size=pagination_params.page_size,
-            )
-
-        except NotFoundError:
-            return []
-
-        return list(PersonShort(**hit["_source"]) for hit in doc["hits"]["hits"])
+from .abc import PersonServiceABC
 
 
 class PersonService(PersonServiceABC):

@@ -4,10 +4,10 @@ from elasticsearch import AsyncElasticsearch
 
 from core.config import settings
 
-from .abc import ElasticManagerABC, StorageClient
+from .abc import DBClient, ElasticManagerABC
 
 
-class ElasticClient(AsyncElasticsearch, StorageClient):
+class ElasticClient(AsyncElasticsearch, DBClient):
     """Обёртка для ElasticSearch"""
 
     ...
@@ -35,12 +35,12 @@ class ElasticManager(ElasticManagerABC):
         return await self.get_client().search(*args, **kwargs)
 
 
-def get_manager() -> ElasticManager:
+def get_manager() -> ElasticManagerABC:
     """
     Получить instance менеджера
     """
 
-    manager: ElasticManager | None = cast(ElasticManager, ElasticManager.get_instance())
+    manager: ElasticManagerABC = ElasticManager.get_instance()
     if manager is None:
         manager = ElasticManager(ElasticClient(hosts=[settings.elastic_endpoint]))
     return manager

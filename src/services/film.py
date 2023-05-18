@@ -4,11 +4,9 @@ from uuid import UUID
 
 from elasticsearch import NotFoundError
 
+from cache import cache_decorator
 from db.elastic import get_manager as get_elastic_manager
-from db.redis import get_cache
 from models.models import Film, FilmRoles, FilmShort
-
-from .cache import cache_decorator
 
 
 class FilmService:
@@ -24,7 +22,7 @@ class FilmService:
         film = await self._get_film_from_elastic(film_id)
         return film
 
-    @cache_decorator(get_cache())
+    @cache_decorator()
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
         try:
             doc = await get_elastic_manager().get(index='movies', id=film_id)
@@ -60,7 +58,7 @@ class FilmService:
 
         return await self._get_films_from_elastic(sort, pagination_params)
 
-    @cache_decorator(get_cache())
+    @cache_decorator()
     async def get_films_by_genre(
         self, sort: str | None, pagination_params, genre_id: str
     ) -> list[FilmShort]:
@@ -92,7 +90,7 @@ class FilmService:
             return []
         return [FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
-    @cache_decorator(get_cache())
+    @cache_decorator()
     async def get_similar_films(
         self, sort: str | None, pagination_params, film_id: str
     ) -> list[FilmShort]:
@@ -117,7 +115,7 @@ class FilmService:
             return []
         return [FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
-    @cache_decorator(get_cache())
+    @cache_decorator()
     async def _get_films_from_elastic(
         self, sort: str | None, pagination_params
     ) -> list[FilmShort]:
@@ -139,7 +137,7 @@ class FilmService:
     async def get_by_query(self, query: str, pagination_params) -> list[FilmShort]:
         return await self._get_qfilm_from_elastic(query, pagination_params)
 
-    @cache_decorator(get_cache())
+    @cache_decorator()
     async def _get_qfilm_from_elastic(
         self, film_name: str, pagination_params
     ) -> list[FilmShort]:
@@ -165,7 +163,7 @@ class FilmService:
             person_id, pagination_params
         )
 
-    @cache_decorator(get_cache())
+    @cache_decorator()
     async def _get_films_with_roles_by_person_from_elastic(
         self, person_id: UUID, pagination_params
     ) -> list[FilmRoles]:
@@ -233,7 +231,7 @@ class FilmService:
             person_id, pagination_params
         )
 
-    @cache_decorator(get_cache())
+    @cache_decorator()
     async def _get_films_by_person_from_elastic(
         self, person_id: UUID, pagination_params
     ) -> list[FilmShort]:

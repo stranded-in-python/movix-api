@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from services.cache import Cache, cache_decorator, expired, prepare_key
+from cache.cache import Cache, cache_decorator, expired, prepare_key
 
 
 def test_prepare_key():
@@ -26,7 +26,7 @@ def test_prepare_key():
 
 
 def test_expired():
-    with patch('services.cache.datetime') as mocked_datetime:
+    with patch('cache.cache.datetime') as mocked_datetime:
         # Set the current datetime to a fixed value
         mocked_datetime.now.return_value = datetime(2023, 4, 28, 12, 0, 0)
 
