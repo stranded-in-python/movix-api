@@ -17,7 +17,7 @@ class FilmService:
             "writers_inner_hits": "writer",
         }
 
-    async def get_by_id(self, film_id: str) -> Optional[Film]:
+    async def get_by_id(self, film_id: str) -> Optional[Film]: #переписано
         """Получить фильм по ID"""
         film = await self._get_film_from_elastic(film_id)
         return film
