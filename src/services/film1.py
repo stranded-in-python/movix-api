@@ -1,10 +1,6 @@
 from functools import lru_cache
 from uuid import UUID
 
-
-
-
-
 from db.elastic import get_manager as get_elastic_manager
 from models.models import Film, FilmShort
 from storages.abc import FilmStorageABC
@@ -25,26 +21,30 @@ class FilmService(FilmServiceABC):
             return None
         return Film(**dict(film))
 
-    async def get_films(self,
+    async def get_films(
+        self,
         sort: str | None,
         pagination_params,
         genre_id: str | None,
-        similar_to: str | None) -> list[FilmShort] | None:
-        
-        films = await self.storage.get_items(sort, pagination_params, genre_id, similar_to)
+        similar_to: str | None,
+    ) -> list[FilmShort] | None:
+
+        films = await self.storage.get_items(
+            sort, pagination_params, genre_id, similar_to
+        )
 
         if not films:
             return None
-    
+
         return films
 
     async def get_by_query(self, query, pagination_params) -> list[FilmShort] | None:
-        
+
         films = await self.storage.get_by_query(query, pagination_params)
 
         if not films:
             return None
-        
+
         return films
 
 

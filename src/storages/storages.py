@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Any, Callable
 from uuid import UUID
 
 from elasticsearch import NotFoundError
@@ -43,7 +43,6 @@ class FilmElasticStorage(FilmStorageABC):
         genre_id: str | None,
         similar_to: str | None,
     ) -> list[models.FilmShort] | None:
-        
 
         if genre_id and not similar_to:
             return await self.get_films_by_genre(sort, pagination_params, genre_id)
@@ -51,7 +50,7 @@ class FilmElasticStorage(FilmStorageABC):
             return await self.get_similar_films(sort, pagination_params, similar_to)
 
         return await self._get_films_from_elastic(sort, pagination_params)
-        
+
     @cache_decorator()
     async def get_films_by_genre(self, sort, pagination_params, genre_id):
         query = {
@@ -82,7 +81,6 @@ class FilmElasticStorage(FilmStorageABC):
             return []
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
-
     @cache_decorator()
     async def get_similar_films(
         self, sort: str | None, pagination_params, film_id: str
@@ -107,7 +105,7 @@ class FilmElasticStorage(FilmStorageABC):
         except NotFoundError:
             return []
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
-    
+
     @cache_decorator()
     async def _get_films_from_elastic(
         self, sort: str | None, pagination_params
@@ -128,7 +126,9 @@ class FilmElasticStorage(FilmStorageABC):
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
     @cache_decorator()
-    async def get_by_query(self, query: str, pagination_params) -> list[models.FilmShort]:
+    async def get_by_query(
+        self, query: str, pagination_params
+    ) -> list[models.FilmShort]:
         try:
             elastic_query = {"match": {"title": query}}
             body = {
