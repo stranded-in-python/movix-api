@@ -2,36 +2,49 @@ from http import HTTPStatus
 
 import pytest
 
-from tests.test_services.testdata.films_responses import (
-    FILM_DETAILED_SUCCESS,
-    FILM_DETAILED_UNPROCESSABLE,
-)
+from tests.test_services.testdata import films_responses
 
 pytestmark = pytest.mark.asyncio
 
 
 class TestFilm:
-    async def test_get_by_id_ok(self, client):
-        response = await client.get(
-            "/api/v1/films/0312ed51-8833-413f-bff5-0e139c11264a"
-        )
-        assert response.status_code == HTTPStatus.OK, response.text
-        assert response.json() == FILM_DETAILED_SUCCESS
+    @pytest.mark.parametrize(
+        'url,status_code,response_json',
+        [
+            (
+                "/api/v1/films/0312ed51-8833-413f-bff5-0e139c11264a",
+                HTTPStatus.OK,
+                films_responses.FILM_DETAILED_SUCCESS,
+            ),
+            (
+                "/api/v1/films/-1",
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                films_responses.FILM_DETAILED_UNPROCESSABLE,
+            ),
+            (
+                "/api/v1/films/0311ed51-8833-413f-bff5-0e139c11264a",
+                HTTPStatus.NOT_FOUND,
+                films_responses.FILM_DETAILED_NOTFOUND,
+            ),
+        ],
+    )
+    async def test_get_details(self, client, url, status_code, response_json):
+        response = await client.get(url)
 
-    async def test_get_by_id_notfound(self, client):
-        response = await client.get(
-            "/api/v1/films/0311ed51-8833-413f-bff5-0e139c11264a"
-        )
-        assert response.status_code == HTTPStatus.NOT_FOUND, response.text
+        assert response.status_code == status_code, response.text
+        assert response.json() == response_json
 
-    async def test_get_by_id_unprocessable(self, client):
-        response = await client.get("/api/v1/films/-1")
-        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.text
-        assert response.json() == FILM_DETAILED_UNPROCESSABLE
-
-    async def test_get_film_list(self, client):
-        response = await client.get(
-            "/api/v1/films/?sort=-imdb_rating&page_size=10&page_number=1"
-        )
-        assert response.status_code == HTTPStatus.OK, response.text
-        assert len(response.json()) == 10
+    @pytest.mark.parametrize(
+        'url,status_code,count',
+        [
+            (
+                "/api/v1/films/?sort=-imdb_rating&page_size=10&page_number=1",
+                HTTPStatus.OK,
+                10,
+            )
+        ],
+    )
+    async def test_get_film_list(self, client, url, status_code, count):
+        response = await client.get(url)
+        assert response.status_code == status_code, response.text
+        assert len(response.json()) == count
