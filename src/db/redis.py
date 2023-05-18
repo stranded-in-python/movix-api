@@ -1,11 +1,8 @@
-import logging
-import pickle
-from typing import Any, Optional, cast
+from typing import Optional, cast
 
 from redis.asyncio import Redis
 
 from core.config import settings
-from core.utils import Singleton
 
 from .abc import DBClient, DBManager
 

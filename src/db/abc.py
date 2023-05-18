@@ -19,7 +19,7 @@ class DBManager(metaclass=Singleton):
         self._client = client
 
     @classmethod
-    def get_instance(cls: type['DBManager']):
+    def get_instance(cls: type[DBManager]):
         return cls._instances.get(cls)
 
     async def on_shutdown(self):

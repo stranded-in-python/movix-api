@@ -1,5 +1,3 @@
-from typing import cast
-
 from elasticsearch import AsyncElasticsearch
 
 from core.config import settings
