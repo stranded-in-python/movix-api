@@ -13,6 +13,11 @@ from .abc import FilmStorageABC, GenreStorageABC, PersonStorageABC
 class FilmElasticStorage(FilmStorageABC):
     def __init__(self, manager: Callable[[], ElasticManagerABC]):
         self.manager = manager
+        self._person_roles = {
+            "actors_inner_hits": "actor",
+            "directors_inner_hits": "director",
+            "writers_inner_hits": "writer",
+        }
 
     @cache_decorator()
     async def get_item(self, item_id: UUID) -> models.FilmShort | None:
@@ -141,6 +146,110 @@ class FilmElasticStorage(FilmStorageABC):
         except NotFoundError:
             return []
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
+
+    @cache_decorator()
+    async def get_films_by_person(
+        self, person_id: UUID, pagination_params
+    ) -> list[models.FilmShort]:
+        try:
+            query = {
+                "bool": {
+                    "should": [
+                        {
+                            "nested": {
+                                "path": "actors",
+                                "query": {"match": {"actors.id": person_id}},
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "writers",
+                                "query": {"match": {"writers.id": person_id}},
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "directors",
+                                "query": {"match": {"directors.id": person_id}},
+                            }
+                        },
+                    ]
+                }
+            }
+            source = ["id", "imdb_rating", "title"]
+
+            doc = await self.manager().search(
+                index="movies",
+                query=query,
+                source=source,
+                size=pagination_params.page_size,
+                from_=pagination_params.page_number,
+            )
+
+        except NotFoundError:
+            return []
+
+        return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
+
+    @cache_decorator()
+    async def get_films_with_roles_by_person(
+        self, person_id: UUID, pagination_params
+    ) -> list[models.FilmRoles]:
+        def parse_roles(inner_hits: dict) -> list[str]:
+            return list(
+                self._person_roles[name]
+                for name, hit in inner_hits.items()
+                if bool(hit["hits"]["total"]["value"]) and name in self._person_roles
+            )
+
+        try:
+            query = {
+                "bool": {
+                    "should": [
+                        {
+                            "nested": {
+                                "path": "actors",
+                                "query": {"match": {"actors.id": person_id}},
+                                "inner_hits": {"name": "actors_inner_hits", "size": 0},
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "writers",
+                                "query": {"match": {"writers.id": person_id}},
+                                "inner_hits": {"name": "writers_inner_hits", "size": 0},
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "directors",
+                                "query": {"match": {"directors.id": person_id}},
+                                "inner_hits": {
+                                    "name": "directors_inner_hits",
+                                    "size": 0,
+                                },
+                            }
+                        },
+                    ]
+                }
+            }
+            source = ["id", "imdb_rating", "title"]
+
+            docs = await self.manager().search(
+                index="movies",
+                query=query,
+                source=source,
+                size=pagination_params.page_size,
+                from_=pagination_params.page_number,
+            )
+
+        except NotFoundError:
+            return []
+
+        return list(
+            models.FilmRoles(**hit["_source"], roles=parse_roles(hit["inner_hits"]))
+            for hit in docs["hits"]["hits"]
+        )
 
 
 class GenreElasticStorage(GenreStorageABC):

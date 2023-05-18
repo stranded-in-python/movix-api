@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from models.models import Film, FilmShort
 from services.abc import FilmServiceABC
-from services.film1 import get_film_service
+from services.films import get_film_service
 
 from .params import PaginateQueryParams
 
@@ -54,7 +54,6 @@ async def film_list(
     film_service: FilmServiceABC = Depends(get_film_service),
 ) -> list[Film]:
     films = await film_service.get_films(sort, pagination_params, genre_id, similar_to)
-    print(films)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
 
@@ -81,8 +80,5 @@ async def film_list_query(
     films = await film_service.get_by_query(query, pagination_params)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
-    films_to_return = [
-        FilmShort(uuid=film.id, title=film.title, imdb_rating=film.imdb_rating)
-        for film in films
-    ]
-    return films_to_return
+
+    return films
