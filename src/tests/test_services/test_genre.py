@@ -8,39 +8,44 @@ pytestmark = pytest.mark.asyncio
 
 
 class TestGenre:
-    async def test_get_by_id_ok(self, client):
+    @pytest.mark.parametrize(
+        'url,status_code,response_json',
+        [
+            (
+                "/api/v1/genres/3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff",
+                HTTPStatus.OK,
+                test_responses.GENRE_DETAILED_SUCCESS,
+            ),
+            (
+                "/api/v1/genres/Action",
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                test_responses.GENRE_DETAILED_UNPROCESSABLE,
+            ),
+            (
+                "/api/v1/genres/3d8d9bf5-0d90-4353-88ba-4ccc5d2c07aa",
+                HTTPStatus.NOT_FOUND,
+                test_responses.GENRE_DETAILED_NOTFOUND,
+            ),
+        ],
+    )
+    async def test_get_by_id(self, client, url, status_code, response_json):
         """Проверка успешного получения информации о жанре
         по корректному идентификатору"""
-        response = await client.get(
-            "/api/v1/genres/3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff"
-        )
+        response = await client.get(url)
 
-        assert response.status_code == HTTPStatus.OK, response.text
-        assert response.json() == test_responses.GENRE_DETAILED_SUCCESS
+        assert response.status_code == status_code, response.text
+        assert response.json() == response_json
 
-    async def test_get_by_id_not_found(self, client):
-        """Проверка обработки некорректного идентификатора жанра"""
-        response = await client.get(
-            "/api/v1/genres/3d8d9bf5-0d90-4353-88ba-4ccc5d2c07aa"
-        )
-
-        assert response.status_code == HTTPStatus.NOT_FOUND, response.text
-        assert response.json() == test_responses.GENRE_DETAILED_NOTFOUND
-
-    async def test_get_by_id_unprocessable(self, client):
-        response = await client.get("/api/v1/genres/Action")
-
-        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.text
-        assert response.json() == test_responses.GENRE_DETAILED_UNPROCESSABLE
-
-    async def test_get_genre_list(self, client):
+    @pytest.mark.parametrize(
+        'url,status_code,count', [("/api/v1/genres", HTTPStatus.OK, 2)]
+    )
+    async def test_get_list(self, client, url, status_code, count):
         """Проверка получения списка жанров"""
-        response = await client.get("/api/v1/genres")
-        assert response.status_code == HTTPStatus.OK, response.text
-
+        response = await client.get(url)
         response_list = response.json()
+
+        assert response.status_code == status_code, response.text
         assert isinstance(response_list, list)
         assert len(response_list) != 0, len(response_list) <= 10
-
-        assert len(response_list[0]) == 2
+        assert len(response_list[0]) == count
         assert "name" in response_list[0], "uuid" in response_list[0]

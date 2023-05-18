@@ -3,10 +3,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from core.pagination import PaginateQueryParams
 from models.models import FilmShort, Person
-from services.film import FilmService, get_film_service
-from services.persons import PersonService, get_persons_service
+from services.abc import FilmServiceABC, PersonServiceABC
+from services.film import get_film_service
+from services.persons import get_persons_service
+
+from .params import PaginateQueryParams
 
 router = APIRouter()
 
@@ -22,8 +24,8 @@ router = APIRouter()
 async def person_list(
     query: str,
     pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
-    persons_service: PersonService = Depends(get_persons_service),
-    film_service: FilmService = Depends(get_film_service),
+    persons_service: PersonServiceABC = Depends(get_persons_service),
+    film_service: FilmServiceABC = Depends(get_film_service),
 ) -> list[Person]:
     persons = await persons_service.get_by_query(query, pagination_params)
 
@@ -54,8 +56,8 @@ async def person_list(
 async def person_details(
     person_id: UUID,
     pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
-    persons_service: PersonService = Depends(get_persons_service),
-    film_service: FilmService = Depends(get_film_service),
+    persons_service: PersonServiceABC = Depends(get_persons_service),
+    film_service: FilmServiceABC = Depends(get_film_service),
 ) -> Person:
     person = await persons_service.get_by_id(person_id)
 
@@ -83,8 +85,8 @@ async def person_details(
 async def person_films(
     person_id: UUID,
     pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
-    persons_service: PersonService = Depends(get_persons_service),
-    film_service: FilmService = Depends(get_film_service),
+    persons_service: PersonServiceABC = Depends(get_persons_service),
+    film_service: FilmServiceABC = Depends(get_film_service),
 ) -> list[FilmShort]:
     person = await persons_service.get_by_id(person_id)
 

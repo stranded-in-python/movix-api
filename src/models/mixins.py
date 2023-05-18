@@ -12,7 +12,7 @@ class JSONConfigMixin:
 
 
 class UUIDMixin(BaseModel):
-    id: UUID | str = Field(alias='uuid')
+    id: UUID = Field(alias='uuid')
 
     @validator('id')
     def string_to_float(cls, v):

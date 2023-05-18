@@ -13,6 +13,16 @@ SEARCH_FILMS_SUCCESS = [
 
 SEARCH_FILMS_NOT_FOUND = {"detail": "film not found"}
 
+SEARCH_FILMS_UNPROCESSABLE_PAGE_NUMBER = {
+    'detail': [
+        {
+            'loc': ['query', 'page_number'],
+            'msg': 'ensure this value is greater than or equal to 1',
+            'type': 'value_error.number.not_ge',
+            'ctx': {'limit_value': 1},
+        }
+    ]
+}
 SEARCH_PERSONS_SUCCESS = [
     {
         "uuid": "6ba834a0-1039-4b5c-ab78-d5f1f18a4e7d",
@@ -41,12 +51,13 @@ SEARCH_PERSONS_SUCCESS = [
 
 SEARCH_PERSONS_NOT_FOUND = {"detail": "persons not found"}
 
-UNPROCESSABLE = {
-    "detail": [
+SEARCH_PERSONS_UNPROCESSABLE_PAGE_SIZE = {
+    'detail': [
         {
-            "loc": ["path", "film_id"],
-            "msg": "value is not a valid uuid",
-            "type": "type_error.uuid",
+            'loc': ['query', 'page_size'],
+            'msg': 'ensure this value is greater than or equal to 1',
+            'type': 'value_error.number.not_ge',
+            'ctx': {'limit_value': 1},
         }
     ]
 }

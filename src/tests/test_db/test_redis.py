@@ -1,9 +1,9 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import fakeredis
 import pytest
 
-from db.redis import Cache, RedisClient, RedisManager, get_manager
+from db.redis import RedisClient, RedisManager, get_manager
 
 pytestmark = pytest.mark.asyncio
 
@@ -26,27 +26,14 @@ def redis_manager(redis_client):
     return manager
 
 
-@pytest.fixture
-def cache(redis_client):
-    return Cache(redis_client)
-
-
 async def test_redis_client_ping(redis_client):
     await redis_client.ping()
     redis_client.ping.assert_awaited_once()
 
 
 async def test_get_manager_returns_instance(mocker, redis_manager):
-    mocked_get = patch.object(RedisManager, "get_instance")
+    mocked_get = mocker.patch.object(RedisManager, "get_instance")
     mocked_get.return_value = redis_manager
     manager = get_manager()
     assert manager == redis_manager
     mocked_get.stop()
-
-
-async def test_get_cache(cache):
-    key = "my_key"
-    value = {"my_value": 42}
-    await cache.set(key, value)
-    result = await cache.get(key)
-    assert result == value

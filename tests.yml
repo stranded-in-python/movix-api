@@ -2,9 +2,6 @@ version: "3.8"
 
 name: "movix_tests"
 
-volumes:
-  redis_data_local: {}
-
 services:
   api:
     image: ghcr.io/stranded-in-python/movix-api:dev
@@ -14,7 +11,7 @@ services:
     depends_on:
       - redis
       - elastic
-    command: sh -c "pytest /app"
+    command: sh -c "pytest /app -vv"
     ports:
       - "8001:8000"
     environment:
@@ -23,8 +20,6 @@ services:
 
   redis:
     image: redis:7.2-rc-bullseye
-    volumes:
-      - redis_data_local:/data
     ports:
       - "6379:6379"
 

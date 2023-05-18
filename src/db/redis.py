@@ -1,18 +1,15 @@
-import logging
-import pickle
-from typing import Any, Optional, cast
+from typing import Optional, cast
 
 from redis.asyncio import Redis
 
 from core.config import settings
-from core.utils import Singleton
 
-from .abc import Client, Manager
+from .abc import DBClient, DBManager
 
 redis: Optional[Redis] = None
 
 
-class RedisClient(Redis, Client):
+class RedisClient(Redis, DBClient):
     """
     Обёртка для redis
     """
@@ -20,7 +17,7 @@ class RedisClient(Redis, Client):
     ...
 
 
-class RedisManager(Manager):
+class RedisManager(DBManager):
     """
     Singleton для обертки соединения к Redis
     """
@@ -47,54 +44,3 @@ def get_manager() -> RedisManager:
             RedisClient(host=settings.redis_host, port=settings.redis_port)
         )
     return manager
-
-
-class CacheError(Exception):
-    """
-    Базовая ошибка кэширования
-    """
-
-    ...
-
-
-class Cache(metaclass=Singleton):
-    """
-    Класс-обёртка над redis для работы с cache методов.
-    """
-
-    def __init__(self, storage: Redis):
-        self.redis: Redis = storage
-
-    async def get(self, key: str) -> Any:
-        """
-        Получить значение из cache по ключу key с отметкой о том, когда было положено
-        """
-        serialized = await self.redis.get(key)
-        value = None
-        try:
-            if not isinstance(serialized, (bytes, bytearray, memoryview)):
-                raise TypeError(f"Failed to deserialize value for key {key}")
-            value = pickle.loads(serialized)
-        except TypeError or pickle.PicklingError as e:
-            logging.error(e)
-        return value
-
-    async def set(self, key: str, value: Any):
-        """
-        Положить значение в cache
-        """
-        try:
-            state = pickle.dumps(value)
-        except pickle.UnpicklingError as e:
-            logging.error(e)
-            raise CacheError("Failed to set an object")
-        await self.redis.set(key, state)
-
-
-def get_cache() -> Cache:
-    """
-    Получить инстанс Cache
-    """
-    redis_manager = get_manager()
-    storage = redis_manager.get_client()
-    return Cache(storage)
