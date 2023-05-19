@@ -3,11 +3,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from core.pagination import PaginateQueryParams
 from models.models import Film, FilmShort
 from services.abc import FilmServiceABC
 from services.films import get_film_service
-
-from .params import PaginateQueryParams
 
 router = APIRouter()
 

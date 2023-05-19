@@ -4,6 +4,7 @@ from uuid import UUID
 import models.models as models
 from core.pagination import PaginateQueryParams
 
+
 class FilmServiceABC(ABC):
     @abstractmethod
     async def get_by_id(self, film_id: UUID) -> models.Film | None:
@@ -21,25 +22,19 @@ class FilmServiceABC(ABC):
 
     @abstractmethod
     async def get_by_query(
-        self, 
-        query: str,
-        pagination_params: PaginateQueryParams,
+        self, query: str, pagination_params: PaginateQueryParams
     ) -> list[models.FilmShort]:
         ...
 
     @abstractmethod
     async def get_films_with_roles_by_person(
-        self,
-        person_id: UUID,
-        pagination_params: PaginateQueryParams,
+        self, person_id: UUID, pagination_params: PaginateQueryParams
     ) -> list[models.FilmRoles]:
         ...
 
     @abstractmethod
     async def get_films_by_person(
-        self,
-        person_id: UUID,
-        pagination_params: PaginateQueryParams,
+        self, person_id: UUID, pagination_params: PaginateQueryParams
     ) -> list[models.FilmShort]:
         ...
 
