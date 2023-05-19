@@ -21,20 +21,8 @@ class FilmServiceABC(ABC):
         ...
 
     @abstractmethod
-    async def get_similar_films(
-        self, sort: str | None, page_size: int, page_number: int, film_id: str
-    ) -> list[models.FilmShort]:
-        ...
-
-    @abstractmethod
     async def get_by_query(
         self, query: str, page_number: int, page_size: int
-    ) -> list[models.FilmShort]:
-        ...
-
-    @abstractmethod
-    async def get_films_by_genre(
-        self, sort: str | None, page_size: int, page_number: int, genre_id: str
     ) -> list[models.FilmShort]:
         ...
 

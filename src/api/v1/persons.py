@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from models.models import FilmShort, Person
 from services.abc import FilmServiceABC, PersonServiceABC
-from services.film import get_film_service
+from services.films import get_film_service
 from services.persons import get_persons_service
 
 from .params import PaginateQueryParams

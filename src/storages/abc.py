@@ -28,8 +28,19 @@ class StorageABC(ABC):
         ...
 
 
-class FilmStorageABC(StorageABC, ABC):
-    ...
+class FilmStorageABC(StorageABC):
+    @abstractmethod
+    async def get_item(self, item_id: UUID) -> models.Film | None:
+        ...
+
+    @abstractmethod
+    async def get_items(
+        self,
+        filters: str | None = None,
+        sort_order: dict[str, Any] | None = None,
+        pagination: PaginateQueryParams | None = None,
+    ) -> list[models.FilmShort] | None:
+        ...
 
 
 class GenreStorageABC(StorageABC):
