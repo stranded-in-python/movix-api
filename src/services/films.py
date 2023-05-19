@@ -2,7 +2,7 @@ from functools import lru_cache
 from uuid import UUID
 
 from db.elastic import get_manager as get_elastic_manager
-from models.models import Film, FilmShort, FilmRoles
+from models.models import Film, FilmRoles, FilmShort
 from storages.abc import FilmStorageABC
 from storages.storages import FilmElasticStorage
 
@@ -52,10 +52,8 @@ class FilmService(FilmServiceABC):
         self, person_id: UUID, pagination_params
     ) -> list[FilmShort]:
         """Получить список фильмов в кратком представлении по персоне"""
-        return await self.storage.get_films_by_person(
-            person_id, pagination_params
-        )
-    
+        return await self.storage.get_films_by_person(person_id, pagination_params)
+
     async def get_films_with_roles_by_person(
         self, person_id: UUID, pagination_params
     ) -> list[FilmRoles]:
@@ -63,7 +61,6 @@ class FilmService(FilmServiceABC):
         return await self.storage.get_films_with_roles_by_person(
             person_id, pagination_params
         )
-    
 
 
 @lru_cache
