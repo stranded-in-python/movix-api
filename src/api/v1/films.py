@@ -52,7 +52,7 @@ async def film_list(
     similar_to: str | None = None,
     pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
     film_service: FilmServiceABC = Depends(get_film_service),
-) -> list[Film]:
+) -> list[FilmShort]:
     films = await film_service.get_films(sort, pagination_params, genre_id, similar_to)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
@@ -76,7 +76,7 @@ async def film_list_query(
     query: str = "",
     pagination_params: PaginateQueryParams = Depends(PaginateQueryParams),
     film_service: FilmServiceABC = Depends(get_film_service),
-) -> list[Film]:
+) -> list[FilmShort]:
     films = await film_service.get_by_query(query, pagination_params)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="film not found")
