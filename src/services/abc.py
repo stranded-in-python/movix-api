@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 import models.models as models
-
+from core.pagination import PaginateQueryParams
 
 class FilmServiceABC(ABC):
     @abstractmethod
@@ -13,8 +13,7 @@ class FilmServiceABC(ABC):
     async def get_films(
         self,
         sort: str | None,
-        page_size: int,
-        page_number: int,
+        pagination_params: PaginateQueryParams,
         genre_id: str | None,
         similar_to: str | None,
     ) -> list[models.FilmShort]:
@@ -22,7 +21,9 @@ class FilmServiceABC(ABC):
 
     @abstractmethod
     async def get_by_query(
-        self, query: str, page_number: int, page_size: int
+        self, 
+        query: str,
+        pagination_params: PaginateQueryParams,
     ) -> list[models.FilmShort]:
         ...
 
@@ -30,8 +31,7 @@ class FilmServiceABC(ABC):
     async def get_films_with_roles_by_person(
         self,
         person_id: UUID,
-        page_size: int | None = None,
-        page_number: int | None = None,
+        pagination_params: PaginateQueryParams,
     ) -> list[models.FilmRoles]:
         ...
 
@@ -39,8 +39,7 @@ class FilmServiceABC(ABC):
     async def get_films_by_person(
         self,
         person_id: UUID,
-        page_size: int | None = None,
-        page_number: int | None = None,
+        pagination_params: PaginateQueryParams,
     ) -> list[models.FilmShort]:
         ...
 
