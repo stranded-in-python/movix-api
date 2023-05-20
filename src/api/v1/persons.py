@@ -3,12 +3,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from core.pagination import PaginateQueryParams
 from models.models import FilmShort, Person
 from services.abc import FilmServiceABC, PersonServiceABC
 from services.films import get_film_service
 from services.persons import get_persons_service
-
-from .params import PaginateQueryParams
 
 router = APIRouter()
 
@@ -98,4 +97,6 @@ async def person_films(
     if films is None:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="films not found")
 
-    return films
+    return [
+        FilmShort(uuid=f.id, title=f.title, imdb_rating=f.imdb_rating) for f in films
+    ]

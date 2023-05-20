@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import Optional
 
 from redis.asyncio import Redis
 
@@ -38,7 +38,7 @@ def get_manager() -> RedisManager:
     Метод для получения инстанса менеджера
     """
 
-    manager: RedisManager | None = cast(RedisManager, RedisManager.get_instance())
+    manager: RedisManager | None = RedisManager.get_instance()
     if manager is None:
         manager = RedisManager(
             RedisClient(host=settings.redis_host, port=settings.redis_port)

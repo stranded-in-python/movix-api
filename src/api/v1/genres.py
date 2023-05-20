@@ -45,4 +45,4 @@ async def genre_list(
     if not genres:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="genres not found")
 
-    return genres
+    return [Genre(**g.dict()) for g in genres]

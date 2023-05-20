@@ -1,34 +1,17 @@
-from typing import Any, Callable
+from typing import Any, Callable, cast
 from uuid import UUID
 
 from elasticsearch import NotFoundError
 
 import models.models as models
 from cache import cache_decorator
+from core.pagination import PaginateQueryParams
 from db.abc import ElasticManagerABC
 
 from .abc import FilmStorageABC, GenreStorageABC, PersonStorageABC
 
 
-class FilmElasticStorage(FilmStorageABC):
-    def __init__(self, manager: Callable[[], ElasticManagerABC]):
-        self.manager = manager
-        self._person_roles = {
-            "actors_inner_hits": "actor",
-            "directors_inner_hits": "director",
-            "writers_inner_hits": "writer",
-        }
-
-    @cache_decorator()
-    async def get_item(self, item_id: UUID) -> models.FilmShort | None:
-        try:
-            doc = await self.manager().get(index='movies', id=item_id)
-
-        except NotFoundError:
-            return None
-
-        return models.Film(**doc.body['_source'])
-
+class ElasticUtilsMixin:
     def _sort_2_order(self, sort: str | None) -> dict[str, Any]:
         if not sort:
             return {"sort": "id:asc"}
@@ -41,23 +24,79 @@ class FilmElasticStorage(FilmStorageABC):
             case _:
                 return {"sort": "id:asc"}
 
-    async def get_items(
-        self,
-        sort: str | None,
-        pagination_params,
-        genre_id: str | None,
-        similar_to: str | None,
-    ) -> list[models.FilmShort] | None:
+    def pagination_2_query_args(
+        self, pagination: None | PaginateQueryParams
+    ) -> dict[str, int]:
+        if not pagination:
+            return {}
+        return {"from": pagination.page_number, "size": pagination.page_size}
 
-        if genre_id and not similar_to:
-            return await self.get_films_by_genre(sort, pagination_params, genre_id)
-        if similar_to:
-            return await self.get_similar_films(sort, pagination_params, similar_to)
 
-        return await self._get_films_from_elastic(sort, pagination_params)
+class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
+    def __init__(self, manager: Callable[[], ElasticManagerABC]):
+        self.manager = manager
+        self._person_roles = {
+            "actors_inner_hits": "actor",
+            "directors_inner_hits": "director",
+            "writers_inner_hits": "writer",
+        }
 
     @cache_decorator()
-    async def get_films_by_genre(self, sort, pagination_params, genre_id):
+    async def _get_films_from_elastic(
+        self, sort_order: str | None, pagination
+    ) -> list[models.FilmShort]:
+        query: dict = {"match_all": {}}
+        body: dict = {
+            **self.pagination_2_query_args(pagination),
+            "query": query,
+            "_source": ["id", "imdb_rating", "title"],
+        }
+
+        try:
+            doc = await self.manager().search(
+                index="movies", body=body, **self._sort_2_order(sort_order)
+            )
+        except NotFoundError:
+            return []
+        return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
+
+    @cache_decorator()
+    async def get_item(self, item_id: UUID) -> models.FilmShort | None:
+        try:
+            doc = await self.manager().get(index='movies', id=item_id)
+
+        except NotFoundError:
+            return None
+
+        return models.Film(**doc.body['_source'])
+
+    async def get_items(
+        self,
+        filters: dict[str, Any] | None = None,
+        sort_order: str | None = None,
+        pagination: PaginateQueryParams | None = None,
+    ) -> list[models.FilmShort] | None:
+        if not filters:
+            filters = {}
+
+        if 'similar_to' in filters:
+            return await self.get_similar_films(
+                sort_order, pagination, cast(UUID, filters.get('similar_to'))
+            )
+        if 'genre_id' in filters:
+            return await self.get_films_by_genre(
+                sort_order, pagination, cast(UUID, filters.get('genre_id'))
+            )
+
+        return await self._get_films_from_elastic(sort_order, pagination)
+
+    @cache_decorator()
+    async def get_films_by_genre(
+        self,
+        sort_order: str | None,
+        pagination: PaginateQueryParams | None,
+        genre_id: UUID,
+    ) -> list[models.FilmShort]:
         query = {
             "bool": {
                 "must": [
@@ -72,15 +111,16 @@ class FilmElasticStorage(FilmStorageABC):
                 ]
             }
         }
+
         body = {
-            "from": pagination_params.page_number,
-            "size": pagination_params.page_size,
             "query": query,
             "_source": ["id", "imdb_rating", "title"],
+            **self.pagination_2_query_args(pagination),
         }
+
         try:
             doc = await self.manager().search(
-                index="movies", body=body, **self._sort_2_order(sort)
+                index="movies", body=body, **self._sort_2_order(sort_order)
             )
         except NotFoundError:
             return []
@@ -88,7 +128,10 @@ class FilmElasticStorage(FilmStorageABC):
 
     @cache_decorator()
     async def get_similar_films(
-        self, sort: str | None, pagination_params, film_id: str
+        self,
+        sort_order: str | None,
+        pagination: PaginateQueryParams | None,
+        film_id: UUID,
     ) -> list[models.FilmShort]:
         """Получить похожие фильмы. Похожими фильмами являются фильмы в одном жанре"""
         try:
@@ -98,33 +141,17 @@ class FilmElasticStorage(FilmStorageABC):
         genres_to_search = [elem['name'] for elem in doc['_source']['genres']]
         query = {"bool": {"filter": [{"terms": {"genre": genres_to_search}}]}}
         body = {
-            "from": pagination_params.page_number,
-            "size": pagination_params.page_size,
+            **self.pagination_2_query_args(pagination),
             "query": query,
             "_source": ["id", "imdb_rating", "title"],
         }
-        try:
-            doc = await self.manager().search(
-                index="movies", body=body, **self._sort_2_order(sort)
-            )
-        except NotFoundError:
-            return []
-        return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
+        if pagination:
+            body["from"] = pagination.page_number
+            body["size"] = pagination.page_size
 
-    @cache_decorator()
-    async def _get_films_from_elastic(
-        self, sort: str | None, pagination_params
-    ) -> list[models.FilmShort]:
-        query: dict = {"match_all": {}}
-        body: dict = {
-            "from": pagination_params.page_number,
-            "size": pagination_params.page_size,
-            "query": query,
-            "_source": ["id", "imdb_rating", "title"],
-        }
         try:
             doc = await self.manager().search(
-                index="movies", body=body, **self._sort_2_order(sort)
+                index="movies", body=body, **self._sort_2_order(sort_order)
             )
         except NotFoundError:
             return []
@@ -132,24 +159,29 @@ class FilmElasticStorage(FilmStorageABC):
 
     @cache_decorator()
     async def get_by_query(
-        self, query: str, pagination_params
+        self, query: str, sort_order: str | None, pagination: PaginateQueryParams
     ) -> list[models.FilmShort]:
         try:
             elastic_query = {"match": {"title": query}}
             body = {
-                "from": pagination_params.page_number,
-                "size": pagination_params.page_size,
+                **self.pagination_2_query_args(pagination),
                 "query": elastic_query,
                 "_source": ["id", "imdb_rating", "title"],
             }
-            doc = await self.manager().search(index="movies", body=body)
+
+            doc = await self.manager().search(
+                index="movies", body=body, **self._sort_2_order(sort_order)
+            )
         except NotFoundError:
             return []
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
     @cache_decorator()
     async def get_films_by_person(
-        self, person_id: UUID, pagination_params
+        self,
+        sort_order: str | None,
+        pagination: PaginateQueryParams | None,
+        person_id: UUID,
     ) -> list[models.FilmShort]:
         try:
             query = {
@@ -178,12 +210,14 @@ class FilmElasticStorage(FilmStorageABC):
             }
             source = ["id", "imdb_rating", "title"]
 
+            body = {
+                **self.pagination_2_query_args(pagination),
+                "query": query,
+                "_source": source,
+            }
+
             doc = await self.manager().search(
-                index="movies",
-                query=query,
-                source=source,
-                size=pagination_params.page_size,
-                from_=pagination_params.page_number,
+                index="movies", body=body, **self._sort_2_order(sort_order)
             )
 
         except NotFoundError:
@@ -193,7 +227,10 @@ class FilmElasticStorage(FilmStorageABC):
 
     @cache_decorator()
     async def get_films_with_roles_by_person(
-        self, person_id: UUID, pagination_params
+        self,
+        sort_order: str | None,
+        pagination: PaginateQueryParams | None,
+        person_id: UUID,
     ) -> list[models.FilmRoles]:
         def parse_roles(inner_hits: dict) -> list[str]:
             return list(
@@ -235,12 +272,14 @@ class FilmElasticStorage(FilmStorageABC):
             }
             source = ["id", "imdb_rating", "title"]
 
+            body = {
+                **self.pagination_2_query_args(pagination),
+                "query": query,
+                "_source": source,
+            }
+
             docs = await self.manager().search(
-                index="movies",
-                query=query,
-                source=source,
-                size=pagination_params.page_size,
-                from_=pagination_params.page_number,
+                index="movies", body=body, **self._sort_2_order(sort_order)
             )
 
         except NotFoundError:
@@ -252,7 +291,7 @@ class FilmElasticStorage(FilmStorageABC):
         )
 
 
-class GenreElasticStorage(GenreStorageABC):
+class GenreElasticStorage(ElasticUtilsMixin, GenreStorageABC):
     def __init__(self, manager: Callable[[], ElasticManagerABC]):
         self.manager = manager
 
@@ -294,13 +333,26 @@ class GenreElasticStorage(GenreStorageABC):
         return results["aggregations"]["avg_imdb_rating"]["value"]
 
     @cache_decorator()
-    async def get_items(self) -> list[models.GenreShort | models.Genre] | None:
+    async def get_items(
+        self,
+        filters: dict[str, Any] | None = None,
+        sort_order: str | None = None,
+        pagination: PaginateQueryParams | None = None,
+    ) -> list[models.GenreShort | models.Genre] | None:
         query: dict = {"match_all": {}}
         source: list = ["id", "name"]
+        body = {
+            **self.pagination_2_query_args(pagination),
+            'query': query,
+            '_source': source,
+        }
+
+        if not filters:
+            pass
 
         try:
             doc = await self.manager().search(
-                index="genres", query=query, source=source
+                index="genres", body=body, **self._sort_2_order(sort_order)
             )
 
         except NotFoundError:
@@ -311,7 +363,7 @@ class GenreElasticStorage(GenreStorageABC):
         )
 
 
-class PersonElasticStorage(PersonStorageABC):
+class PersonElasticStorage(ElasticUtilsMixin, PersonStorageABC):
     def __init__(self, manager: Callable[[], ElasticManagerABC]):
         self.manager = manager
 
@@ -327,18 +379,25 @@ class PersonElasticStorage(PersonStorageABC):
 
     @cache_decorator()
     async def get_items(
-        self, filters: str, pagination_params
-    ) -> list[models.PersonShort]:
-        query = {"match": {"full_name": filters}}
+        self,
+        filters: dict[str, Any] | None = None,
+        sort_order: str | None = None,
+        pagination: PaginateQueryParams | None = None,
+    ) -> list[models.PersonShort] | None:
+        if not filters:
+            filters = {}
+
+        query = {"match": {"full_name": filters.get('name')}}
         source = ["id", "full_name"]
+        body = {
+            **self.pagination_2_query_args(pagination),
+            'query': query,
+            '_source': source,
+        }
 
         try:
             doc = await self.manager().search(
-                index="persons",
-                query=query,
-                source=source,
-                from_=pagination_params.page_number,
-                size=pagination_params.page_size,
+                index="persons", body=body, **self._sort_2_order(sort_order)
             )
 
         except NotFoundError:
