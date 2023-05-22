@@ -4,7 +4,7 @@ import pytest
 
 import tests.test_services.testdata.person_responses as test_responses
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.integrational]
 
 
 class TestPerson:
