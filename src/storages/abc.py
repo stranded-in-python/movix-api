@@ -24,7 +24,7 @@ class StorageABC(ABC):
         filters: dict[str, Any] | None = None,
         sort_order: str | None = None,
         pagination: PaginateQueryParams | None = None,
-    ) -> list[BaseModel]:
+    ) -> list[BaseModel] | None:
         ...
 
 
@@ -48,7 +48,7 @@ class FilmStorageABC(StorageABC):
         sort_order: str | None,
         pagination: PaginateQueryParams | None,
         genre_id: UUID,
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         ...
 
     @abstractmethod
@@ -57,13 +57,13 @@ class FilmStorageABC(StorageABC):
         sort_order: str | None,
         pagination: PaginateQueryParams | None,
         film_id: UUID,
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         ...
 
     @abstractmethod
     async def get_by_query(
         self, query: str, sort_order: str | None, pagination: PaginateQueryParams | None
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         ...
 
     @abstractmethod
@@ -72,7 +72,7 @@ class FilmStorageABC(StorageABC):
         sort_order: str | None,
         pagination: PaginateQueryParams | None,
         person_id: UUID,
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         ...
 
     @abstractmethod
@@ -81,7 +81,7 @@ class FilmStorageABC(StorageABC):
         sort_order: str | None,
         pagination: PaginateQueryParams | None,
         person_id: UUID,
-    ) -> list[models.FilmRoles]:
+    ) -> list[models.FilmRoles] | None:
         ...
 
 

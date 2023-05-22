@@ -44,7 +44,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
     @cache_decorator()
     async def _get_films_from_elastic(
         self, sort_order: str | None, pagination
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         query: dict = {"match_all": {}}
         body: dict = {
             **self.pagination_2_query_args(pagination),
@@ -57,7 +57,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
                 index="movies", body=body, **self._sort_2_order(sort_order)
             )
         except NotFoundError:
-            return []
+            return None
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
     @cache_decorator()
@@ -96,7 +96,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
         sort_order: str | None,
         pagination: PaginateQueryParams | None,
         genre_id: UUID,
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         query = {
             "bool": {
                 "must": [
@@ -123,7 +123,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
                 index="movies", body=body, **self._sort_2_order(sort_order)
             )
         except NotFoundError:
-            return []
+            return None
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
     @cache_decorator()
@@ -132,12 +132,12 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
         sort_order: str | None,
         pagination: PaginateQueryParams | None,
         film_id: UUID,
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         """Получить похожие фильмы. Похожими фильмами являются фильмы в одном жанре"""
         try:
             doc = await self.manager().get(index='movies', id=film_id)
         except NotFoundError:
-            return []
+            return None
         genres_to_search = [elem['name'] for elem in doc['_source']['genres']]
         query = {"bool": {"filter": [{"terms": {"genre": genres_to_search}}]}}
         body = {
@@ -154,13 +154,13 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
                 index="movies", body=body, **self._sort_2_order(sort_order)
             )
         except NotFoundError:
-            return []
+            return None
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
     @cache_decorator()
     async def get_by_query(
         self, query: str, sort_order: str | None, pagination: PaginateQueryParams
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         try:
             elastic_query = {"match": {"title": query}}
             body = {
@@ -173,7 +173,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
                 index="movies", body=body, **self._sort_2_order(sort_order)
             )
         except NotFoundError:
-            return []
+            return None
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
     @cache_decorator()
@@ -182,7 +182,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
         sort_order: str | None,
         pagination: PaginateQueryParams | None,
         person_id: UUID,
-    ) -> list[models.FilmShort]:
+    ) -> list[models.FilmShort] | None:
         try:
             query = {
                 "bool": {
@@ -221,7 +221,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
             )
 
         except NotFoundError:
-            return []
+            return None
 
         return [models.FilmShort(**hit["_source"]) for hit in doc["hits"]["hits"]]
 
@@ -231,7 +231,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
         sort_order: str | None,
         pagination: PaginateQueryParams | None,
         person_id: UUID,
-    ) -> list[models.FilmRoles]:
+    ) -> list[models.FilmRoles] | None:
         def parse_roles(inner_hits: dict) -> list[str]:
             return list(
                 self._person_roles[name]
@@ -283,7 +283,7 @@ class FilmElasticStorage(ElasticUtilsMixin, FilmStorageABC):
             )
 
         except NotFoundError:
-            return []
+            return None
 
         return list(
             models.FilmRoles(**hit["_source"], roles=parse_roles(hit["inner_hits"]))
@@ -401,6 +401,6 @@ class PersonElasticStorage(ElasticUtilsMixin, PersonStorageABC):
             )
 
         except NotFoundError:
-            return []
+            return None
 
         return list(models.PersonShort(**hit["_source"]) for hit in doc["hits"]["hits"])

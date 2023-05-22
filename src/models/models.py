@@ -21,10 +21,10 @@ class Genre(GenreShort):
 
 class Film(FilmShort):
     description: str | None = None
-    genres: list[GenreShort]
-    actors: list[PersonShort]
-    writers: list[PersonShort]
-    directors: list[PersonShort]
+    genres: list[GenreShort] | None = None
+    actors: list[PersonShort] | None = None
+    writers: list[PersonShort] | None = None
+    directors: list[PersonShort] | None = None
 
 
 class FilmRoles(FilmShort):

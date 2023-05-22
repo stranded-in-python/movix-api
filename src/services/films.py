@@ -47,14 +47,18 @@ class FilmService(FilmServiceABC):
 
         return [Film(**f.dict()) for f in films]
 
-    async def get_films_by_person(self, person_id: UUID, pagination) -> list[Film]:
+    async def get_films_by_person(
+        self, person_id: UUID, pagination
+    ) -> list[Film] | None:
         """Получить список фильмов в кратком представлении по персоне"""
         films = await self.storage.get_films_by_person(None, pagination, person_id)
+        if not films:
+            return None
         return [Film(**f.dict()) for f in films]
 
     async def get_films_with_roles_by_person(
         self, person_id: UUID, pagination
-    ) -> list[FilmRoles]:
+    ) -> list[FilmRoles] | None:
         """Получить фильмы персоны с его ролью"""
         return await self.storage.get_films_with_roles_by_person(
             None, pagination, person_id
