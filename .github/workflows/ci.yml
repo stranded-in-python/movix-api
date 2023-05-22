@@ -36,11 +36,10 @@ jobs:
             requirements/base.txt
             requirements/local.txt
 
-      - name: install requirements
-        run: pip install -r requirements/local.txt
-
-      - name: Run pre-commit
-        uses: pre-commit/action@v3.0.0
+      - name: pre-commit
+        run: |
+          pip install -r requirements/local.txt
+          pre-commit run --show-diff-on-failure --color=always --all-files
 
   pytest:
     runs-on: ubuntu-latest
