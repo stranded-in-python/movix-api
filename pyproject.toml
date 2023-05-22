@@ -9,4 +9,6 @@ venvPath = '.'
 
 [tool.pytest.ini_options]
 asyncio_mode = 'auto'
-filterwarnings = 'ignore::DeprecationWarning'
+markers = [
+  "integrational: marks test as dependant on external services"
+]

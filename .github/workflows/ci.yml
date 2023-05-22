@@ -36,6 +36,9 @@ jobs:
             requirements/base.txt
             requirements/local.txt
 
+      - name: install requirements
+        run: pip install -r requirements/local.txt
+
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.0
 
