@@ -4,7 +4,7 @@ import pytest
 
 from tests.test_services.testdata import films_responses
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.integrational]
 
 
 class TestFilm:
