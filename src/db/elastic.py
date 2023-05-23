@@ -38,7 +38,7 @@ def get_manager() -> ElasticManagerABC:
     Получить instance менеджера
     """
 
-    manager: ElasticManagerABC = ElasticManager.get_instance()
+    manager: ElasticManagerABC | None = ElasticManager.get_instance()
     if manager is None:
         manager = ElasticManager(ElasticClient(hosts=[settings.elastic_endpoint]))
     return manager

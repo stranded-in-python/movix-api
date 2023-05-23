@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 import models.models as models
+from core.pagination import PaginateQueryParams
 
 
 class FilmServiceABC(ABC):
@@ -13,35 +14,28 @@ class FilmServiceABC(ABC):
     async def get_films(
         self,
         sort: str | None,
-        page_size: int,
-        page_number: int,
+        pagination: PaginateQueryParams | None,
         genre_id: str | None,
         similar_to: str | None,
-    ) -> list[models.FilmShort]:
+    ) -> list[models.Film]:
         ...
 
     @abstractmethod
     async def get_by_query(
-        self, query: str, page_number: int, page_size: int
-    ) -> list[models.FilmShort]:
+        self, query: str, pagination: PaginateQueryParams | None
+    ) -> list[models.Film]:
         ...
 
     @abstractmethod
     async def get_films_with_roles_by_person(
-        self,
-        person_id: UUID,
-        page_size: int | None = None,
-        page_number: int | None = None,
+        self, person_id: UUID, pagination: PaginateQueryParams | None
     ) -> list[models.FilmRoles]:
         ...
 
     @abstractmethod
     async def get_films_by_person(
-        self,
-        person_id: UUID,
-        page_size: int | None = None,
-        page_number: int | None = None,
-    ) -> list[models.FilmShort]:
+        self, person_id: UUID, pagination: PaginateQueryParams | None
+    ) -> list[models.Film]:
         ...
 
 
@@ -51,17 +45,17 @@ class GenreServiceABC(ABC):
         ...
 
     @abstractmethod
-    async def get_genres(self) -> list[models.GenreShort] | None:
+    async def get_genres(self) -> list[models.Genre] | None:
         ...
 
 
 class PersonServiceABC(ABC):
     @abstractmethod
-    async def get_by_id(self, person_id: UUID) -> models.PersonShort | None:
+    async def get_by_id(self, person_id: UUID) -> models.Person | None:
         ...
 
     @abstractmethod
     async def get_by_query(
-        self, name: str, page_size: int | None = None, page_number: int | None = None
-    ) -> list[models.PersonShort]:
+        self, name: str, pagination: PaginateQueryParams | None
+    ) -> list[models.Person]:
         ...

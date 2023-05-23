@@ -33,7 +33,7 @@ class RedisCacheStorage(CacheStorageABC):
             raise TypeError(f"Failed to get serialized value for key {key}")
         return value
 
-    async def set(self, key: str, value: bytes | bytearray | memoryview):
+    async def set(self, key: str, value: bytes | bytearray | memoryview | None):
         if not isinstance(value, (bytes, bytearray, memoryview)):
             raise TypeError(
                 f"Expected bytes or None value for key {key}, but have {type(value)}"
