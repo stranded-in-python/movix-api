@@ -12,25 +12,25 @@ class ModelConfig:
 
 class Settings(BaseSettings):
     # Название проекта. Используется в Swagger-документации
-    project_name: str = 'movies'
+    project_name: str = 'movix-api'
 
     # Настройки Redis
-    redis_host: str = '127.0.0.1'
+    redis_host: str = 'redis'
     redis_port: int = 6379
     cache_expiration_in_seconds: int = 300
 
     # Настройки Elasticsearch
-    elastic_endpoint: str = 'http://127.0.0.1:9200'
+    elastic_endpoint: str = 'http://elastic:9200'
 
     # Корень проекта
     base_dir = os.path.dirname(os.path.dirname(__file__))
 
     log_level: str = LOG_LEVEL
 
-    access_token_secret: SecretStr = SecretStr('SECRET')
+    access_token_secret: SecretStr = SecretStr('ACCESS')
     access_token_audience: str = 'movix:auth'
 
-    auth_user_rights_endpoint: str = 'http://auth/api/v1/users/user_id/rights'
+    auth_user_rights_endpoint: str = 'http://auth:8000/api/v1/users/user_id/roles'
 
 
 settings = Settings()

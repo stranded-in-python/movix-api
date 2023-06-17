@@ -30,9 +30,11 @@ async def get_user_rights(user: models.User, token: str) -> models.User:
 
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
-        access_rights = response.json().get("access_rights")
+        access_rights = response.json()
+        if not isinstance(access_rights, list):
+            return user
         user.access_rights = (
-            [right.get("title") for right in access_rights] if access_rights else []
+            [right.get("name") for right in access_rights] if access_rights else []
         )
 
     return user
@@ -61,7 +63,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth_scheme)]) -> mode
 
     try:
         user = await get_user_rights(user, token)
-    except httpx.TimeoutException:
+    except httpx.ConnectError:
         user.auth_timeout = True
     except NotAuthorizedError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)

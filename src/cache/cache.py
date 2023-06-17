@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Callable, cast
 
-import core.utils as utils
+import core.singleton as utils
 from core.config import settings
 from db.redis import RedisClient, get_manager
 

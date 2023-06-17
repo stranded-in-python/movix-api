@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
-from api.v1 import films, genres, persons
+from api.v1 import films, genres, persons, users
 from core.config import settings
 from db import elastic, redis
 
@@ -31,10 +31,10 @@ async def shutdown():
     await elastic_manager.on_shutdown()  # type: ignore
 
 
-app.include_router(films.router, prefix="/api/v1/films", tags=["films"])
-app.include_router(genres.router, prefix="/api/v1/genres", tags=["genres"])
-app.include_router(persons.router, prefix="/api/v1/persons", tags=["persons"])
-
+app.include_router(films.router, prefix="/api/v1/films", tags=["Фильмы"])
+app.include_router(genres.router, prefix="/api/v1/genres", tags=["Жанры"])
+app.include_router(persons.router, prefix="/api/v1/persons", tags=["Персоны"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["Пользователи"])
 
 if __name__ == "__main__":
     uvicorn.run(
