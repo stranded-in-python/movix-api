@@ -1,7 +1,7 @@
 import os
 from logging import config as logging_config
 
-from pydantic import BaseSettings
+from pydantic import BaseSettings, SecretStr
 
 from core.logger import LOG_LEVEL, get_logging_config
 
@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     base_dir = os.path.dirname(os.path.dirname(__file__))
 
     log_level: str = LOG_LEVEL
+
+    access_token_secret: SecretStr = SecretStr('SECRET')
+    access_token_audience: str = 'movix:auth'
+
+    auth_user_rights_endpoint: str = 'http://auth/api/v1/users/user_id/rights'
 
 
 settings = Settings()

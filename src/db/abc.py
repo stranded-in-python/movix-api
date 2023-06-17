@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from elastic_transport import ObjectApiResponse
 
-from core.utils import Singleton
+from core.singleton import Singleton
 
 
 class DBClient(ABC):
