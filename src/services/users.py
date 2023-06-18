@@ -4,13 +4,13 @@ from typing import Annotated
 import httpx
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer
 
 from core.config import settings
 from core.utils import read_token as jwt_read_token
 from models import models
 
-oauth_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oauth_scheme = HTTPBearer()
 
 
 class TokenReadingError(Exception):
