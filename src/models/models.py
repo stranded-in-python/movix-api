@@ -33,3 +33,8 @@ class FilmRoles(FilmShort):
 
 class Person(PersonShort):
     films: list[FilmRoles]
+
+
+class User(UUIDMixin):
+    access_rights: list[str] | None = None
+    auth_timeout: bool = False
