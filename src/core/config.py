@@ -32,9 +32,15 @@ class Settings(BaseSettings):
 
     auth_user_rights_endpoint: str = 'http://auth:8000/api/v1/users/user_id/roles'
 
+    sentry_dsn_api: str = ""
+
 
 settings = Settings()
 
+if settings.sentry_dsn_api:
+    import sentry_sdk  # type: ignore
+
+    sentry_sdk.init(dsn=settings.sentry_dsn_api, traces_sample_rate=1.0)
 
 # Применяем настройки логирования
 logging_config.dictConfig(get_logging_config(level=settings.log_level))
